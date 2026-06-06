@@ -113,8 +113,9 @@ export const useAuctionStore = create<AuctionStore>((set, get) => {
         state.socket.disconnect();
       }
 
-      // Establish socket.io connection pointing to the window origin (unified host/port)
-      const socketUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      // Establish socket.io connection pointing to the configured server or the window origin (unified host/port)
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 
+        (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
       const socket = io(socketUrl);
 
       socket.on('connect', () => {
