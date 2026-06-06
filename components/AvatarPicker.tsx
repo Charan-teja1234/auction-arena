@@ -12,7 +12,7 @@ export default function AvatarPicker({ selectedId, onSelect, takenAvatarIds = []
   return (
     <div className="space-y-3 font-sans">
       <label className="block text-sm font-semibold text-zinc-400">Select Franchise Emblem</label>
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-5 gap-2 sm:gap-3">
         {PRESETS_AVATARS.map((avatar) => {
           const isSelected = avatar.id === selectedId;
           const isTaken = takenAvatarIds.includes(avatar.id);
@@ -22,15 +22,13 @@ export default function AvatarPicker({ selectedId, onSelect, takenAvatarIds = []
               type="button"
               disabled={isTaken}
               onClick={() => onSelect(avatar.id)}
-              className={`relative flex h-14 w-full items-center justify-center rounded-xl bg-gradient-to-br ${
-                avatar.color
-              } transition-all duration-300 transform active:scale-95 ${
-                isSelected
+              className={`relative flex h-14 w-full items-center justify-center rounded-xl bg-gradient-to-br ${avatar.color
+                } transition-all duration-300 transform active:scale-95 ${isSelected
                   ? 'ring-2 ring-primary ring-offset-2 ring-offset-background scale-105 shadow-lg shadow-primary/20 cursor-pointer'
                   : isTaken
-                  ? 'opacity-25 cursor-not-allowed grayscale'
-                  : 'opacity-75 hover:opacity-100 hover:scale-105 cursor-pointer'
-              }`}
+                    ? 'opacity-25 cursor-not-allowed grayscale'
+                    : 'opacity-75 hover:opacity-100 hover:scale-105 cursor-pointer'
+                }`}
               title={isTaken ? `${avatar.name} (Taken)` : avatar.name}
             >
               {/* Franchise Emblem Logo Vector */}
