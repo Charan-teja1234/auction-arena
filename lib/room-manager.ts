@@ -18,6 +18,7 @@ export interface TeamState {
   isAI: boolean;
   aiPersonality?: 'MI_NITA' | 'RCB_BOLD' | 'CSK_THALA' | 'SRH_KAVYA' | 'KKR_SRK' | 'PBKS_PREITY';
   isSpectator: boolean;
+  connected?: boolean;
 }
 
 export interface ChatMessage {
@@ -139,7 +140,8 @@ export class RoomManager {
         purse: 0,
         roster: [],
         isAI: false,
-        isSpectator: true
+        isSpectator: true,
+        connected: true
       });
       
       room.chat.push({
@@ -162,7 +164,8 @@ export class RoomManager {
           purse: 0,
           roster: [],
           isAI: false,
-          isSpectator: true
+          isSpectator: true,
+          connected: true
         });
         
         room.chat.push({
@@ -181,7 +184,8 @@ export class RoomManager {
           purse: room.settings.budget,
           roster: [],
           isAI: false,
-          isSpectator: false
+          isSpectator: false,
+          connected: true
         });
 
         room.chat.push({
@@ -210,6 +214,8 @@ export class RoomManager {
         timestamp: Date.now(),
         type: 'system'
       });
+      
+      participant.connected = false;
       
       // If the game hasn't started, remove them. If it has started, we keep them so they can reconnect.
       if (room.status === 'LOBBY') {
@@ -271,7 +277,8 @@ export class RoomManager {
       roster: [],
       isAI: true,
       aiPersonality,
-      isSpectator: false
+      isSpectator: false,
+      connected: true
     };
 
     room.participants.push(botState);
