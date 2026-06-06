@@ -31,7 +31,7 @@ export default function ChatPanel({ room, myPlayerId, onSendChat }: ChatPanelPro
   const textMessages = room.chat.filter((msg) => msg.type !== 'system');
 
   return (
-    <div className="glass-panel rounded-2xl border border-border/80 flex flex-col h-[320px] bg-card/45 overflow-hidden">
+    <div className="glass-panel rounded-2xl border border-border/80 flex flex-col h-full min-h-[320px] bg-card/45 overflow-hidden">
       {/* Header bar */}
       <div className="bg-secondary/40 px-4 py-3 border-b border-border/50 flex items-center gap-2">
         <MessageSquare className="w-4 h-4 text-primary" />
