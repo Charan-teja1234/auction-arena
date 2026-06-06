@@ -354,7 +354,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
       )}
 
       {/* Header bar */}
-      <header className="w-full bg-card/60 border-b border-border/60 py-3 px-6 flex items-center justify-between backdrop-blur-md z-35 select-none shrink-0">
+      <header className="w-full bg-card/60 border-b border-border/60 py-3 px-4 md:px-6 flex items-center justify-between backdrop-blur-md z-35 select-none shrink-0">
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleReplay}
@@ -364,14 +364,14 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex flex-col">
-            <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider leading-none">MULTIPLAYER STAGE</span>
-            <span className="text-base font-extrabold text-white leading-none mt-1">
+            <span className="text-[10px] md:text-xs text-zinc-500 font-bold uppercase tracking-wider leading-none">MULTIPLAYER STAGE</span>
+            <span className="text-sm md:text-base font-extrabold text-white leading-none mt-1">
               Room <span className="text-primary font-black text-glow-gold">{roomId}</span>
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <div className="hidden md:flex items-center gap-2 bg-background border border-border px-3.5 py-1.5 rounded-full text-xs font-semibold">
             {socketConnected ? (
               <Wifi className="w-3.5 h-3.5 text-cricket-green shrink-0" />
@@ -385,7 +385,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
 
           <button
             onClick={handleCopyLink}
-            className="flex items-center gap-1.5 bg-secondary hover:bg-zinc-800 border border-border text-white text-xs font-bold px-4 py-2 rounded-xl transition-all animate-pulse"
+            className="flex items-center gap-1.5 bg-secondary hover:bg-zinc-800 border border-border text-white text-[10px] md:text-xs font-bold px-3 md:px-4 py-2 rounded-xl transition-all animate-pulse"
           >
             {copiedLink ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
             {copiedLink ? 'Copied Invite' : 'Copy Invite Link'}
@@ -394,7 +394,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
       </header>
 
       {/* Main Container */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-4 flex flex-col gap-4 min-h-0 z-30 justify-start select-none">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col gap-4 min-h-0 z-30 justify-start select-none">
         
         {room.status === 'LOBBY' ? (
           /* Lobby view */
@@ -485,60 +485,65 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
             
             {/* 1. HORIZONTAL ACTION BOARD (ALWAYS ON TOP) */}
             {activePlayer && isBiddingActive && (
-              <div className="w-full bg-card border border-border/80 p-5 md:p-6 rounded-3xl flex flex-col lg:flex-row items-center gap-6 justify-between shrink-0 shadow-xl select-none min-h-[96px]">
+              <div className="w-full bg-card border border-border/80 p-4 md:p-6 rounded-3xl flex flex-col lg:flex-row items-center gap-4 lg:gap-6 justify-between shrink-0 shadow-xl select-none min-h-[96px]">
                 
-                {/* A. Active Player Profile & Countdown timer */}
-                <div className="flex items-center gap-5 border-b lg:border-b-0 lg:border-r border-border/40 pb-4 lg:pb-0 lg:pr-6 shrink-0 w-full lg:w-auto justify-between lg:justify-start">
-                  <div className="flex flex-col">
-                    <h3 className="font-black text-white text-base md:text-lg leading-tight truncate max-w-[180px]">
-                      {activePlayer.name}
-                    </h3>
-                    <span className="text-xs text-zinc-500 font-extrabold uppercase mt-1 block">
-                      {activePlayer.role} • Rated {activePlayer.rating}
-                    </span>
-                  </div>
-
-                  {/* Timer Box */}
-                  <div className="flex items-center gap-2 bg-background border border-border/80 px-3.5 py-2 rounded-2xl shrink-0 shadow-inner">
-                    {room.status === 'BIDDING' && (
-                      <span className={`h-2.5 w-2.5 rounded-full ${room.timer <= 5 ? 'bg-red-500 animate-ping' : 'bg-primary'}`} />
-                    )}
-                    <span className={`text-sm font-black tabular-nums tracking-wide ${
-                      room.timer <= 5 && room.status === 'BIDDING' ? 'text-red-500 animate-pulse' : 'text-zinc-200'
-                    }`}>
-                      {room.timer}s
-                    </span>
-                  </div>
-                </div>
-
-                {/* B. Live Pricing & Bid Leader details & Commentary ticker */}
-                <div className="flex-1 flex items-center justify-between lg:justify-around gap-6 border-b lg:border-b-0 lg:border-r border-border/40 pb-4 lg:pb-0 lg:px-6 min-w-0 w-full lg:w-auto">
-                  <div className="flex items-center gap-8 shrink-0">
+                {/* Responsive wrapper to keep Section A & B grouped on mobile/tablet */}
+                <div className="flex flex-col md:flex-row lg:contents gap-4 md:gap-6 w-full lg:w-auto">
+                  
+                  {/* A. Active Player Profile & Countdown timer */}
+                  <div className="flex items-center gap-5 border-b md:border-b-0 md:border-r border-border/40 pb-4 md:pb-0 md:pr-6 shrink-0 w-full md:w-auto justify-between md:justify-start">
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Price</span>
-                      <span className="text-xl md:text-2xl font-black text-primary text-glow-gold leading-none mt-1">
-                        {room.currentBid === 0 ? 'Base' : `${room.currentBid.toFixed(2)} Cr`}
+                      <h3 className="font-black text-white text-base md:text-lg leading-tight truncate max-w-[180px]">
+                        {activePlayer.name}
+                      </h3>
+                      <span className="text-xs text-zinc-500 font-extrabold uppercase mt-1 block">
+                        {activePlayer.role} • Rated {activePlayer.rating}
                       </span>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Leader</span>
-                      <span className="text-xs md:text-sm font-black text-white leading-none mt-1 block truncate max-w-[140px]">
-                        {room.highestBidderId ? getBidderName(room.highestBidderId) : 'None'}
+
+                    {/* Timer Box */}
+                    <div className="flex items-center gap-2 bg-background border border-border/80 px-3.5 py-2 rounded-2xl shrink-0 shadow-inner">
+                      {room.status === 'BIDDING' && (
+                        <span className={`h-2.5 w-2.5 rounded-full ${room.timer <= 5 ? 'bg-red-500 animate-ping' : 'bg-primary'}`} />
+                      )}
+                      <span className={`text-sm font-black tabular-nums tracking-wide ${
+                        room.timer <= 5 && room.status === 'BIDDING' ? 'text-red-500 animate-pulse' : 'text-zinc-200'
+                      }`}>
+                        {room.timer}s
                       </span>
                     </div>
                   </div>
 
-                  {/* Commentary ticker bubble */}
-                  <div className="hidden xl:flex items-center gap-2.5 bg-primary/5 px-4 py-2.5 rounded-2xl border border-primary/10 max-w-[320px] min-w-0 select-none">
-                    <Mic className="w-4 h-4 text-primary shrink-0 animate-pulse" />
-                    <span className="text-zinc-300 text-xs font-semibold italic truncate">
-                      "{getCommentarySpeech()}"
-                    </span>
+                  {/* B. Live Pricing & Bid Leader details & Commentary ticker */}
+                  <div className="flex-1 flex items-center justify-between md:justify-around gap-6 border-b md:border-b-0 md:border-r border-border/40 pb-4 md:pb-0 md:px-6 min-w-0 w-full md:w-auto">
+                    <div className="flex items-center gap-8 shrink-0">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Price</span>
+                        <span className="text-xl md:text-2xl font-black text-primary text-glow-gold leading-none mt-1">
+                          {room.currentBid === 0 ? 'Base' : `${room.currentBid.toFixed(2)} Cr`}
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Leader</span>
+                        <span className="text-xs md:text-sm font-black text-white leading-none mt-1 block truncate max-w-[140px]">
+                          {room.highestBidderId ? getBidderName(room.highestBidderId) : 'None'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Commentary ticker bubble */}
+                    <div className="hidden xl:flex items-center gap-2.5 bg-primary/5 px-4 py-2.5 rounded-2xl border border-primary/10 max-w-[320px] min-w-0 select-none">
+                      <Mic className="w-4 h-4 text-primary shrink-0 animate-pulse" />
+                      <span className="text-zinc-300 text-xs font-semibold italic truncate">
+                        "{getCommentarySpeech()}"
+                      </span>
+                    </div>
                   </div>
+
                 </div>
 
                 {/* C. Horizontal Increments and Bid Paddles */}
-                <div className="flex items-center justify-center lg:justify-end shrink-0 w-full lg:w-auto">
+                <div className="flex items-center justify-center lg:justify-end shrink-0 w-full lg:w-auto mt-2 md:mt-0">
                   <BiddingControls
                     room={room}
                     myPlayerId={playerId}
@@ -555,7 +560,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5.5 items-stretch min-h-0">
               
               {/* COLUMN 1: Bid Log Ticker (Col span 3 - Left side) */}
-              <div className="lg:col-span-3 glass-panel rounded-2xl p-3.5 bg-card/65 border border-border/80 flex flex-col h-[440px] min-h-0 select-none">
+              <div className="lg:col-span-3 glass-panel rounded-2xl p-3.5 bg-card/65 border border-border/80 flex flex-col h-[260px] lg:h-[440px] min-h-0 select-none order-2 lg:order-1">
                 <span className="text-[9px] uppercase font-bold text-zinc-500 tracking-wider mb-2.5 block border-b border-border/30 pb-2 flex items-center gap-1.5">
                   <ListCollapse className="w-3.5 h-3.5 text-primary" /> Live Bid Activity
                 </span>
@@ -598,14 +603,14 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
               </div>
 
               {/* COLUMN 2: Player details Card (Col span 4 - Center) */}
-              <div className="lg:col-span-4 flex flex-col justify-center items-center h-[440px] min-h-0">
+              <div className="lg:col-span-4 flex flex-col justify-center items-center h-auto py-4 lg:py-0 lg:h-[440px] min-h-0 order-1 lg:order-2">
                 {activePlayer && (
                   <PlayerCard player={activePlayer} status={room.status} />
                 )}
               </div>
-
+ 
               {/* COLUMN 3: Toggleable Standings & Live Chat (Col span 5 - Right side, select toggle) */}
-              <div className="lg:col-span-5 flex flex-col h-[440px] min-h-0">
+              <div className="lg:col-span-5 flex flex-col h-[380px] lg:h-[440px] min-h-0 order-3 lg:order-3">
                 <div className="glass-panel rounded-2xl border border-border/80 flex flex-col h-full bg-card/65 overflow-hidden shadow-xl">
                   
                   {/* Toggle Header Switch */}
@@ -631,7 +636,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                       <MessageSquare className="w-3.5 h-3.5" /> Live Chat
                     </button>
                   </div>
-
+ 
                   {/* Toggle Panel content */}
                   <div className="flex-1 p-3.5 overflow-hidden flex flex-col min-h-0">
                     {activeRightTab === 'standings' ? (
@@ -642,10 +647,10 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                       </div>
                     )}
                   </div>
-
+ 
                 </div>
               </div>
-
+ 
             </div>
 
           </div>
