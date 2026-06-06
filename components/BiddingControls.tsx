@@ -76,25 +76,25 @@ export default function BiddingControls({ room, myPlayerId, onBid, bidError, cle
   const validation = checkBiddingDisabled();
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-3 bg-transparent p-0 border-none select-none w-full">
+    <div className="flex flex-col md:flex-row items-center gap-4 bg-transparent p-0 border-none select-none w-full md:w-auto">
       
       {/* Alert & warning badges */}
       {(validation.reason || bidError) && (
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-2.5 shrink-0">
           {validation.reason && (
-            <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[10px] font-extrabold ${
+            <div className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-black ${
               validation.type === 'success'
                 ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-400'
                 : 'bg-amber-500/10 border-amber-500/35 text-amber-400'
             }`}>
-              {validation.type !== 'success' && <AlertTriangle className="w-3 h-3 shrink-0" />}
+              {validation.type !== 'success' && <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
               <span>{validation.reason}</span>
             </div>
           )}
 
           {bidError && (
-            <div className="flex items-center gap-1 bg-red-500/10 border border-red-500/35 px-2.5 py-1.5 rounded-lg text-[10px] font-black text-red-400">
-              <AlertTriangle className="w-3 h-3 shrink-0" />
+            <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/35 px-3 py-2 rounded-xl text-xs font-black text-red-400">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
               <span>{bidError}</span>
             </div>
           )}
@@ -102,17 +102,17 @@ export default function BiddingControls({ room, myPlayerId, onBid, bidError, cle
       )}
 
       {/* Increments Paddles Row */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-end">
         {room.currentBid === 0 ? (
           <button
             onClick={() => onBid(openingBid)}
             disabled={validation.disabled}
-            className="bg-primary hover:bg-primary/95 text-background font-black px-4.5 py-2.5 rounded-xl text-xs cursor-pointer shadow-md transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+            className="bg-primary hover:bg-primary/95 text-background font-black px-6 py-3.5 rounded-xl text-sm cursor-pointer shadow-md transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none w-full md:w-auto"
           >
             🚀 PLACE BASE: {openingBid.toFixed(2)} Cr
           </button>
         ) : (
-          <div className="flex gap-1.5 shrink-0">
+          <div className="flex gap-2 shrink-0">
             {[
               { amount: opt10L, label: '+10L' },
               { amount: opt20L, label: '+20L' },
@@ -125,10 +125,10 @@ export default function BiddingControls({ room, myPlayerId, onBid, bidError, cle
                   key={idx}
                   onClick={() => onBid(opt.amount)}
                   disabled={validation.disabled || exceedsPurse}
-                  className="bg-secondary hover:bg-zinc-800 hover:border-primary/50 text-white font-extrabold px-3 py-1 border border-border/80 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none text-[10px]"
+                  className="bg-secondary hover:bg-zinc-800 hover:border-primary/50 text-white font-extrabold px-4.5 py-2.5 border border-border/80 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none text-xs min-w-[56px]"
                 >
-                  <span className="text-zinc-500 text-[8px] font-bold uppercase">{opt.label}</span>
-                  <span className="text-primary font-black">{opt.amount.toFixed(2)}</span>
+                  <span className="text-zinc-500 text-[9px] font-bold uppercase leading-none mb-0.5">{opt.label}</span>
+                  <span className="text-primary font-black leading-none">{opt.amount.toFixed(2)}</span>
                 </button>
               );
             })}
@@ -137,7 +137,7 @@ export default function BiddingControls({ room, myPlayerId, onBid, bidError, cle
 
         {/* Custom Paddle (Inline) */}
         {!isSpectator && room.currentBid > 0 && (
-          <form onSubmit={handleCustomBidSubmit} className="flex items-center gap-1 shrink-0">
+          <form onSubmit={handleCustomBidSubmit} className="flex items-center gap-1.5 shrink-0">
             <div className="relative">
               <input
                 type="number"
@@ -147,14 +147,14 @@ export default function BiddingControls({ room, myPlayerId, onBid, bidError, cle
                 onChange={(e) => setCustomBid(e.target.value)}
                 placeholder={`Min ${nextMinBid.toFixed(2)}`}
                 disabled={validation.disabled}
-                className="bg-background border border-border rounded-xl pl-2 pr-6 py-2 text-[10px] text-white font-bold w-24 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                className="bg-background border border-border rounded-xl pl-3 pr-7 py-2.5 text-xs text-white font-bold w-28 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
               />
-              <span className="absolute right-1.5 top-2.5 text-zinc-500 text-[8px] font-bold">Cr</span>
+              <span className="absolute right-2 top-3 text-zinc-500 text-[9px] font-bold">Cr</span>
             </div>
             <button
               type="submit"
               disabled={validation.disabled || !customBid || parseFloat(customBid) < nextMinBid}
-              className="bg-primary hover:bg-primary/95 text-background font-black px-3.5 py-2 rounded-xl text-[10px] shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+              className="bg-primary hover:bg-primary/95 text-background font-black px-4.5 py-2.5 rounded-xl text-xs shadow-sm transition-all active:scale-95 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
             >
               Bid
             </button>
