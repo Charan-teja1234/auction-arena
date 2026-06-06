@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #080a10;
+  --color-foreground: #f8fafc;
+  
+  --color-card: #0e1320;
+  --color-card-foreground: #f8fafc;
+  
+  --color-popover: #0e1320;
+  --color-popover-foreground: #f8fafc;
+  
+  --color-primary: #e2b13c;
+  --color-primary-foreground: #080a10;
+  
+  --color-secondary: #161f33;
+  --color-secondary-foreground: #f8fafc;
+  
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
+  
+  --color-accent: #e2b13c;
+  --color-accent-foreground: #080a10;
+  
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #f8fafc;
+  
+  --color-border: #1e293b;
+  --color-input: #1e293b;
+  --color-ring: #e2b13c;
+
+  --color-gold-glow: rgba(226, 177, 60, 0.15);
+  --color-cricket-green: #10b981;
+}
+
+:root {
+  --background: #080a10;
+  --foreground: #f8fafc;
+  --card: #0e1320;
+  --card-foreground: #f8fafc;
+  --popover: #0e1320;
+  --popover-foreground: #f8fafc;
+  --primary: #e2b13c;
+  --primary-foreground: #080a10;
+  --secondary: #161f33;
+  --secondary-foreground: #f8fafc;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #e2b13c;
+  --accent-foreground: #080a10;
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #e2b13c;
+  --radius: 0.75rem;
+}
+
+/* Base resets & typography */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+}
+
+/* Custom premium scrollbar for sports commentary & chat logs */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(14, 19, 32, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(30, 41, 59, 0.8);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(226, 177, 60, 0.5);
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(14, 19, 32, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 177, 60, 0.1);
+}
+
+/* TV Broadcast static/glow textures */
+.glow-gold {
+  box-shadow: 0 0 15px rgba(226, 177, 60, 0.25);
+  border-color: rgba(226, 177, 60, 0.6);
+}
+
+.text-glow-gold {
+  text-shadow: 0 0 8px rgba(226, 177, 60, 0.5);
+}
+
+.glow-green {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.6);
+}
+
+/* Pulse animation for bid active status */
+@keyframes pulse-gold {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(226, 177, 60, 0.3);
+  }
+  50% {
+    opacity: .8;
+    box-shadow: 0 0 16px rgba(226, 177, 60, 0.6);
+  }
+}
+
+.pulse-border-gold {
+  animation: pulse-gold 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
