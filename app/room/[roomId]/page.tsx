@@ -83,6 +83,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
     timestamp: number;
   }
   const [notifications, setNotifications] = useState<UIBlockNotification[]>([]);
+  const [isConfirmLeaveOpen, setIsConfirmLeaveOpen] = useState(false);
 
   // Load identity values
   useEffect(() => {
@@ -237,9 +238,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
   };
 
   const handleLeaveWithConfirm = () => {
-    if (window.confirm("Are you sure you want to leave the bidding room?")) {
-      handleReplay();
-    }
+    setIsConfirmLeaveOpen(true);
   };
 
   // Helper to find team name for highest bidder
@@ -429,8 +428,8 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
       <header className="w-full bg-card/60 border-b border-border/60 py-3 px-4 md:px-6 flex items-center justify-between backdrop-blur-md z-35 select-none shrink-0">
         <div className="flex items-center gap-2.5">
           <button
-            onClick={handleReplay}
-            className="p-2 bg-secondary hover:bg-zinc-800 border border-border/80 rounded-lg text-zinc-400 hover:text-white transition-colors"
+            onClick={handleLeaveWithConfirm}
+            className="p-2 bg-secondary hover:bg-zinc-800 border border-border/80 rounded-lg text-zinc-400 hover:text-white transition-colors cursor-pointer"
             title="Leave room"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -786,6 +785,56 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
           })}
         </AnimatePresence>
       </div>
+
+      {/* Custom Leave Room Confirmation Dialog */}
+      <AnimatePresence>
+        {isConfirmLeaveOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsConfirmLeaveOpen(false)}
+              className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-auto"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm bg-card border border-border rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col items-center text-center z-10 pointer-events-auto"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-red-500" />
+              
+              <div className="h-12 w-12 rounded-full bg-red-950/30 flex items-center justify-center mb-4 border border-red-900/40 text-red-500">
+                <LogOut className="h-5 w-5 animate-pulse" />
+              </div>
+              
+              <h3 className="text-base font-black text-white">Leave Bidding Room</h3>
+              <p className="text-xs text-zinc-400 mt-2 mb-6 max-w-[240px]">
+                Are you sure you want to leave the bidding room? Any active bids will remain, and you'll need to re-register to re-enter.
+              </p>
+              
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setIsConfirmLeaveOpen(false)}
+                  className="flex-1 bg-secondary hover:bg-zinc-800 border border-border text-zinc-300 font-bold py-2.5 rounded-xl text-xs cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setIsConfirmLeaveOpen(false);
+                    handleReplay();
+                  }}
+                  className="flex-1 bg-red-600 hover:bg-red-500 text-white font-black py-2.5 rounded-xl text-xs cursor-pointer transition-colors shadow-lg shadow-red-600/10"
+                >
+                  Leave Arena
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
