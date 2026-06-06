@@ -105,16 +105,16 @@ export default function LandingPage() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/4 blur-[130px] pointer-events-none" />
 
       {/* Header */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between border-b border-border/40 backdrop-blur-sm z-10">
-        <div className="flex items-center gap-2.5 select-none">
-          <div className="bg-primary p-2 rounded-xl text-background font-black flex items-center justify-center shadow-lg shadow-primary/20">
-            <Trophy className="w-5.5 h-5.5" />
+      <header className="w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-5 flex items-center justify-between border-b border-border/40 backdrop-blur-sm z-10">
+        <div className="flex items-center gap-2 select-none">
+          <div className="bg-primary p-2 rounded-xl text-background font-black flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+            <Trophy className="w-5 h-5 md:w-5.5 md:h-5.5" />
           </div>
-          <span className="text-xl font-black tracking-tight text-white">
+          <span className="text-base sm:text-xl font-black tracking-tight text-white leading-none">
             IPL AUCTION <span className="text-primary text-glow-gold">ARENA</span>
           </span>
         </div>
-        <div className="flex items-center gap-4 select-none">
+        <div className="flex items-center gap-3 md:gap-4 select-none">
           {name && (
             <div className="hidden sm:flex items-center gap-2.5 bg-card/70 px-4 py-2 rounded-full border border-border">
               <span className="h-2 w-2 rounded-full bg-cricket-green animate-pulse" />
@@ -125,7 +125,7 @@ export default function LandingPage() {
           )}
           <button
             onClick={() => router.push('/room/IPL-ARENA')}
-            className="flex items-center gap-1.5 bg-secondary/80 hover:bg-secondary text-white border border-border/80 px-4.5 py-2.5 rounded-xl text-xs font-black transition-all transform hover:-translate-y-0.5 shadow-md cursor-pointer"
+            className="flex items-center gap-1.5 bg-secondary/80 hover:bg-secondary text-white border border-border/80 px-3.5 md:px-4.5 py-2.5 rounded-xl text-xs font-black transition-all transform hover:-translate-y-0.5 shadow-md cursor-pointer"
           >
             <Zap className="w-4 h-4 text-primary" />
             Arena Match
@@ -134,7 +134,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-10 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center z-10 min-h-0">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-16 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center z-10 min-h-0">
         
         {/* Left Info Column */}
         <div className="lg:col-span-7 space-y-7 text-center lg:text-left select-none">
