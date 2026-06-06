@@ -26,7 +26,7 @@ export default function LandingPage() {
   const [maxTeams, setMaxTeams] = useState(6);
   const [startingBudget, setStartingBudget] = useState(100);
   const [timerDuration, setTimerDuration] = useState(15);
-  const [poolSize, setPoolSize] = useState(15);
+  const [poolSize, setPoolSize] = useState(300);
 
   // Configuration Panel view states
   const [showConfigPanel, setShowConfigPanel] = useState(false);
@@ -278,13 +278,10 @@ export default function LandingPage() {
                       <span className="text-zinc-500 font-bold flex items-center gap-1"><Settings className="w-3.5 h-3.5 text-primary" /> Roster Pool</span>
                       <select
                         value={poolSize}
-                        onChange={(e) => setPoolSize(parseInt(e.target.value))}
-                        className="bg-card border border-border rounded-lg p-1.5 text-xs text-white w-full focus:outline-none"
+                        disabled
+                        className="bg-card border border-border rounded-lg p-1.5 text-xs text-white w-full opacity-70 cursor-not-allowed focus:outline-none"
                       >
-                        <option value={10}>10 Cricketers</option>
-                        <option value={15}>15 Cricketers</option>
-                        <option value={20}>20 Cricketers</option>
-                        <option value={25}>25 Cricketers</option>
+                        <option value={300}>All 300 Cricketers (IPL 2026)</option>
                       </select>
                     </div>
                   </div>
