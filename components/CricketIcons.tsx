@@ -73,71 +73,44 @@ export const AllRounderIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+import { 
+  Cat, Bird, Flame, Shield, Sun, 
+  Crown, Zap, Wind, Sword, Swords, Trophy 
+} from 'lucide-react';
+
 interface EmblemProps extends React.SVGProps<SVGSVGElement> {
   avatarId: string;
 }
 
-// Modern, high-end vector franchise emblems with original team acronyms
+// Modern, high-end vector franchise emblems using realistic icons
 export const FranchiseEmblem = ({ avatarId, ...props }: EmblemProps) => {
-  const getEmblemContent = () => {
-    // Shared shield path for a clean, cohesive sports crest layout
-    const shieldPath = "M12 2L3 5v8c0 4.5 3.5 8.5 9 10 5.5-1.5 9-5.5 9-10V5l-9-3z";
-    
-    // Configs for text layout per team
-    const textConfigs = {
-      av1: { text: "CSK", size: "8.5", y: "15" },
-      av2: { text: "MI", size: "10", y: "15.5" },
-      av3: { text: "RCB", size: "8.5", y: "15" },
-      av4: { text: "KKR", size: "8.5", y: "15" },
-      av5: { text: "SRH", size: "8.5", y: "15" },
-      av6: { text: "RR", size: "10", y: "15.5" },
-      av7: { text: "DC", size: "10", y: "15.5" },
-      av8: { text: "LSG", size: "8.5", y: "15" },
-      av9: { text: "GT", size: "10", y: "15.5" },
-      av10: { text: "PBKS", size: "7.5", y: "15" }
-    };
-
-    const config = textConfigs[avatarId as keyof typeof textConfigs] || { text: "IPL", size: "8.5", y: "15" };
-
-    return (
-      <>
-        {/* Shield background filled with solid dark slate to block gradients */}
-        <path
-          d={shieldPath}
-          fill="#0c0f18" 
-          stroke="currentColor" 
-          strokeWidth="2.2"
-          strokeLinejoin="round"
-        />
-        
-        {/* Stylized sports team acronym text */}
-        <text
-          x="12"
-          y={config.y}
-          fill="currentColor" 
-          stroke="none"
-          fontSize={config.size}
-          fontWeight="900"
-          textAnchor="middle"
-          fontFamily="system-ui, -apple-system, sans-serif"
-          className="select-none font-black"
-        >
-          {config.text}
-        </text>
-      </>
-    );
+  const getIcon = () => {
+    const iconProps = { className: props.className };
+    switch (avatarId) {
+      case 'av1': // CSK Lion
+        return <Cat {...iconProps} />;
+      case 'av2': // MI Eagle
+        return <Bird {...iconProps} />;
+      case 'av3': // RCB Tiger (Flame symbol for boldness)
+        return <Flame {...iconProps} />;
+      case 'av4': // KKR Knight (Shield of the Knight)
+        return <Shield {...iconProps} />;
+      case 'av5': // SRH Sun
+        return <Sun {...iconProps} />;
+      case 'av6': // RR Crown
+        return <Crown {...iconProps} />;
+      case 'av7': // DC Tiger (Lightning bolt for speed/power)
+        return <Zap {...iconProps} />;
+      case 'av8': // LSG Wings (Wind symbol for flight)
+        return <Wind {...iconProps} />;
+      case 'av9': // GT Titan (Sword of the Titan)
+        return <Sword {...iconProps} />;
+      case 'av10': // PBKS King (Crossed swords for battle)
+        return <Swords {...iconProps} />;
+      default:
+        return <Trophy {...iconProps} />;
+    }
   };
 
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      {getEmblemContent()}
-    </svg>
-  );
+  return getIcon();
 };
