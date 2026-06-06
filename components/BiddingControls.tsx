@@ -102,7 +102,7 @@ export default function BiddingControls({ room, myPlayerId, onBid, bidError, cle
       )}
 
       {/* Increments Paddles Row */}
-      <div className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-end">
+      <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-center md:justify-end">
         {room.currentBid === 0 ? (
           <button
             onClick={() => onBid(openingBid)}
