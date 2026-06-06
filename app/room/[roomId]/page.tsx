@@ -485,25 +485,25 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
             
             {/* 1. HORIZONTAL ACTION BOARD (ALWAYS ON TOP) */}
             {activePlayer && isBiddingActive && (
-              <div className="w-full bg-card border border-border/80 p-3.5 rounded-2xl flex flex-col lg:flex-row items-center gap-4 justify-between shrink-0 shadow-lg select-none">
+              <div className="w-full bg-card border border-border/80 p-5 md:p-6 rounded-3xl flex flex-col lg:flex-row items-center gap-6 justify-between shrink-0 shadow-xl select-none min-h-[96px]">
                 
                 {/* A. Active Player Profile & Countdown timer */}
-                <div className="flex items-center gap-3.5 border-b lg:border-b-0 lg:border-r border-border/40 pb-3.5 lg:pb-0 lg:pr-4 shrink-0">
+                <div className="flex items-center gap-5 border-b lg:border-b-0 lg:border-r border-border/40 pb-4 lg:pb-0 lg:pr-6 shrink-0 w-full lg:w-auto justify-between lg:justify-start">
                   <div className="flex flex-col">
-                    <h3 className="font-extrabold text-white text-sm leading-none truncate max-w-[140px]">
+                    <h3 className="font-black text-white text-base md:text-lg leading-tight truncate max-w-[180px]">
                       {activePlayer.name}
                     </h3>
-                    <span className="text-[9px] text-zinc-500 font-black uppercase mt-1 block">
+                    <span className="text-xs text-zinc-500 font-extrabold uppercase mt-1 block">
                       {activePlayer.role} • Rated {activePlayer.rating}
                     </span>
                   </div>
 
                   {/* Timer Box */}
-                  <div className="flex items-center gap-1.5 bg-background border border-border/80 px-2.5 py-1.5 rounded-xl shrink-0">
+                  <div className="flex items-center gap-2 bg-background border border-border/80 px-3.5 py-2 rounded-2xl shrink-0 shadow-inner">
                     {room.status === 'BIDDING' && (
-                      <span className={`h-2 w-2 rounded-full ${room.timer <= 5 ? 'bg-red-500 animate-ping' : 'bg-primary'}`} />
+                      <span className={`h-2.5 w-2.5 rounded-full ${room.timer <= 5 ? 'bg-red-500 animate-ping' : 'bg-primary'}`} />
                     )}
-                    <span className={`text-[11px] font-black tabular-nums tracking-wide ${
+                    <span className={`text-sm font-black tabular-nums tracking-wide ${
                       room.timer <= 5 && room.status === 'BIDDING' ? 'text-red-500 animate-pulse' : 'text-zinc-200'
                     }`}>
                       {room.timer}s
@@ -512,33 +512,33 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                 </div>
 
                 {/* B. Live Pricing & Bid Leader details & Commentary ticker */}
-                <div className="flex-1 flex items-center justify-around gap-4 border-b lg:border-b-0 lg:border-r border-border/40 pb-3.5 lg:pb-0 lg:px-4 min-w-0">
-                  <div className="flex items-center gap-5.5 shrink-0">
+                <div className="flex-1 flex items-center justify-between lg:justify-around gap-6 border-b lg:border-b-0 lg:border-r border-border/40 pb-4 lg:pb-0 lg:px-6 min-w-0 w-full lg:w-auto">
+                  <div className="flex items-center gap-8 shrink-0">
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Price</span>
-                      <span className="text-base font-black text-primary text-glow-gold leading-none mt-1">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Price</span>
+                      <span className="text-xl md:text-2xl font-black text-primary text-glow-gold leading-none mt-1">
                         {room.currentBid === 0 ? 'Base' : `${room.currentBid.toFixed(2)} Cr`}
                       </span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Leader</span>
-                      <span className="text-[11px] font-black text-white leading-none mt-1 block truncate max-w-[95px]">
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Leader</span>
+                      <span className="text-xs md:text-sm font-black text-white leading-none mt-1 block truncate max-w-[140px]">
                         {room.highestBidderId ? getBidderName(room.highestBidderId) : 'None'}
                       </span>
                     </div>
                   </div>
 
                   {/* Commentary ticker bubble */}
-                  <div className="hidden xl:flex items-center gap-2 bg-primary/5 px-3 py-1.5 rounded-xl border border-primary/10 max-w-[200px] min-w-0 select-none">
-                    <Mic className="w-3.5 h-3.5 text-primary shrink-0 animate-pulse" />
-                    <span className="text-zinc-300 text-[10px] font-semibold italic truncate">
+                  <div className="hidden xl:flex items-center gap-2.5 bg-primary/5 px-4 py-2.5 rounded-2xl border border-primary/10 max-w-[320px] min-w-0 select-none">
+                    <Mic className="w-4 h-4 text-primary shrink-0 animate-pulse" />
+                    <span className="text-zinc-300 text-xs font-semibold italic truncate">
                       "{getCommentarySpeech()}"
                     </span>
                   </div>
                 </div>
 
                 {/* C. Horizontal Increments and Bid Paddles */}
-                <div className="flex items-center justify-end shrink-0 w-full lg:w-auto">
+                <div className="flex items-center justify-center lg:justify-end shrink-0 w-full lg:w-auto">
                   <BiddingControls
                     room={room}
                     myPlayerId={playerId}
