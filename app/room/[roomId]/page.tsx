@@ -3,6 +3,7 @@
 import React, { useState, useEffect, use, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuctionStore } from '../../../store/useAuctionStore';
+import { TeamState } from '../../../lib/room-manager';
 import AvatarPicker from '../../../components/AvatarPicker';
 import { PRESETS_AVATARS } from '../../../lib/players';
 import PlayerCard from '../../../components/PlayerCard';
@@ -12,7 +13,7 @@ import ChatPanel from '../../../components/ChatPanel';
 import TeamSummary from '../../../components/TeamSummary';
 import { 
   Trophy, Users, Share2, Copy, Play, ArrowLeft, 
-  UserPlus, ShieldAlert, Wifi, Check, MessageSquare, Mic, ListCollapse
+  UserPlus, ShieldAlert, Wifi, Check, MessageSquare, Mic, ListCollapse, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -73,6 +74,16 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
   // Link copy check
   const [copiedLink, setCopiedLink] = useState(false);
 
+  // Custom Toasts/Notifications System for when players leave/disconnect
+  interface UIBlockNotification {
+    id: string;
+    message: string;
+    teamName: string;
+    avatarId: string;
+    timestamp: number;
+  }
+  const [notifications, setNotifications] = useState<UIBlockNotification[]>([]);
+
   // Load identity values
   useEffect(() => {
     if (name) {
@@ -117,6 +128,61 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
       bidScrollRef.current.scrollTop = bidScrollRef.current.scrollHeight;
     }
   }, [room?.bidHistory]);
+
+  const prevParticipantsRef = useRef<TeamState[] | null>(null);
+
+  // Detect when other participants leave/disconnect
+  useEffect(() => {
+    if (!room?.participants) return;
+
+    if (isOnboarding) {
+      prevParticipantsRef.current = room.participants;
+      return;
+    }
+
+    const prevList = prevParticipantsRef.current;
+    if (prevList) {
+      const disconnectedOrLeft = prevList.filter(prevP => {
+        // Skip ourselves
+        if (prevP.id === playerId) return false;
+
+        const currP = room.participants.find(p => p.id === prevP.id);
+        
+        // Scenario 1: Participant removed completely (e.g. during lobby phase)
+        if (!currP) return true;
+
+        // Scenario 2: Participant was connected and is now disconnected (offline during active phase)
+        const wasConnected = prevP.connected !== false;
+        const isConnectedNow = currP.connected !== false;
+        return wasConnected && !isConnectedNow;
+      });
+
+      disconnectedOrLeft.forEach(p => {
+        const id = Math.random().toString(36).substr(2, 9);
+        const isSpectatorText = p.isSpectator ? ' (Spectator)' : '';
+        const nameText = p.name;
+        const teamText = p.isSpectator ? '' : ` [${p.teamName}]`;
+        const message = `${nameText}${teamText}${isSpectatorText} left the bidding arena.`;
+
+        const newNotification: UIBlockNotification = {
+          id,
+          message,
+          teamName: p.teamName,
+          avatarId: p.avatarId,
+          timestamp: Date.now()
+        };
+
+        setNotifications(prev => [...prev, newNotification]);
+
+        // Auto remove toast after 5 seconds
+        setTimeout(() => {
+          setNotifications(prev => prev.filter(n => n.id !== id));
+        }, 5000);
+      });
+    }
+
+    prevParticipantsRef.current = room.participants;
+  }, [room?.participants, isOnboarding, playerId]);
 
   const handleOnboardingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +234,12 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
   const handleReplay = () => {
     leaveRoom();
     router.push('/');
+  };
+
+  const handleLeaveWithConfirm = () => {
+    if (window.confirm("Are you sure you want to leave the bidding room?")) {
+      handleReplay();
+    }
   };
 
   // Helper to find team name for highest bidder
@@ -389,6 +461,14 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
           >
             {copiedLink ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
             {copiedLink ? 'Copied Invite' : 'Copy Invite Link'}
+          </button>
+
+          <button
+            onClick={handleLeaveWithConfirm}
+            className="flex items-center gap-1.5 bg-red-950/30 hover:bg-red-950/50 border border-red-900/40 hover:border-red-900/60 text-red-400 text-[10px] md:text-xs font-bold px-3 md:px-4 py-2 rounded-xl transition-all cursor-pointer shadow-sm hover:text-red-300"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Leave Room
           </button>
         </div>
       </header>
@@ -662,6 +742,51 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
       {room.status === 'COMPLETED' && (
         <TeamSummary room={room} myPlayerId={playerId} onReplay={handleReplay} />
       )}
+
+      {/* Toast Notification Container */}
+      <div className="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none w-80 max-w-[calc(100vw-2rem)] select-none">
+        <AnimatePresence>
+          {notifications.map((notif) => {
+            const avatar = PRESETS_AVATARS.find(a => a.id === notif.avatarId);
+            return (
+              <motion.div
+                key={notif.id}
+                initial={{ opacity: 0, x: 100, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 100, scale: 0.9, transition: { duration: 0.2 } }}
+                className="pointer-events-auto w-full bg-card/90 backdrop-blur-md border border-red-500/30 shadow-lg shadow-red-950/20 rounded-2xl p-4 flex items-start gap-3 relative overflow-hidden"
+              >
+                {/* Left accent bar */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />
+                
+                {/* Avatar / Icon */}
+                <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${avatar ? avatar.color : 'from-zinc-700 to-zinc-800'} flex items-center justify-center shrink-0 shadow`}>
+                  <LogOut className="h-5 w-5 text-white animate-pulse" />
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 pr-4">
+                  <span className="text-xs font-black text-red-400 block uppercase tracking-wider mb-0.5">
+                    Manager Left
+                  </span>
+                  <p className="text-xs font-semibold text-zinc-200 leading-snug">
+                    {notif.message}
+                  </p>
+                </div>
+
+                {/* Dismiss button */}
+                <button
+                  onClick={() => setNotifications(prev => prev.filter(n => n.id !== notif.id))}
+                  className="text-zinc-500 hover:text-zinc-300 transition-colors text-xs font-extrabold hover:bg-zinc-800/40 h-5 w-5 rounded-full flex items-center justify-center shrink-0 cursor-pointer"
+                >
+                  ×
+                </button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+
     </div>
   );
 }
