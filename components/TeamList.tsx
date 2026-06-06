@@ -84,6 +84,8 @@ export default function TeamList({ room, myPlayerId }: TeamListProps) {
               <div
                 key={team.id}
                 className={`border rounded-2xl transition-all overflow-hidden ${
+                  team.connected === false ? 'opacity-50' : ''
+                } ${
                   isMe
                     ? 'border-primary/55 bg-primary/5 shadow-md shadow-primary/2'
                     : 'border-border/60 bg-card/40 hover:bg-card/75'
@@ -112,6 +114,11 @@ export default function TeamList({ room, myPlayerId }: TeamListProps) {
                         {team.isAI && (
                           <span className="bg-zinc-800 text-zinc-400 text-[8px] font-black px-1.5 py-0.5 rounded border border-border/80 uppercase">
                             BOT
+                          </span>
+                        )}
+                        {team.connected === false && (
+                          <span className="bg-red-950/50 text-red-500 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-900/40 uppercase animate-pulse">
+                            OFFLINE
                           </span>
                         )}
                       </div>
