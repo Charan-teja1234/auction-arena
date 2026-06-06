@@ -13,7 +13,7 @@ import ChatPanel from '../../../components/ChatPanel';
 import TeamSummary from '../../../components/TeamSummary';
 import { 
   Trophy, Users, Share2, Copy, Play, ArrowLeft, 
-  UserPlus, ShieldAlert, Wifi, Check, MessageSquare, Mic, ListCollapse, LogOut
+  UserPlus, ShieldAlert, Wifi, Check, MessageSquare, Mic, MicOff, ListCollapse, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -286,6 +286,105 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
         return "Bidding is underway.";
     }
   };
+
+  // Text-to-Speech (TTS) voice synthesis states, refs, and controls
+  const [isTtsEnabled, setIsTtsEnabled] = useState(false);
+  const lastSpokenRef = useRef('');
+  const speechTimeoutRef = useRef<any>(null);
+  const commentaryText = getCommentarySpeech();
+
+  // TTS Toggle action
+  const toggleTts = () => {
+    setIsTtsEnabled(prev => {
+      const next = !prev;
+      if (next) {
+        // Clear last spoken cache so it plays the current commentary immediately
+        lastSpokenRef.current = '';
+      }
+      return next;
+    });
+  };
+
+  // Ensure voices are fetched properly when changed in browser
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    const handleVoicesChanged = () => {
+      window.speechSynthesis.getVoices();
+    };
+    window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged);
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged);
+    };
+  }, []);
+
+  // Web Speech API Synthesis Trigger Effect (with debouncing for fast bidding)
+  useEffect(() => {
+    if (!isTtsEnabled) {
+      if (speechTimeoutRef.current) {
+        clearTimeout(speechTimeoutRef.current);
+        speechTimeoutRef.current = null;
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      return;
+    }
+
+    if (!commentaryText || commentaryText === lastSpokenRef.current) return;
+    lastSpokenRef.current = commentaryText;
+
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      // Clear any pending speech timeouts to reset the debounce timer
+      if (speechTimeoutRef.current) {
+        clearTimeout(speechTimeoutRef.current);
+      }
+
+      // Check if this commentary update is a critical event (SOLD, UNSOLD, countdown warnings)
+      const isCritical = 
+        room?.status === 'SOLD' || 
+        room?.status === 'UNSOLD' || 
+        room?.status === 'REVEAL' || 
+        room?.status === 'COMPLETED' || 
+        (room?.timer !== undefined && room.timer <= 5);
+
+      // 50ms browser safety delay for critical updates, 250ms debouncing for rapid bidding updates
+      const delay = isCritical ? 50 : 250;
+
+      speechTimeoutRef.current = setTimeout(() => {
+        if (!isTtsEnabled) return;
+
+        // Cancel any ongoing speaking to keep audio commentary synchronized
+        window.speechSynthesis.cancel();
+
+        // Clean emojis and format text for text-to-speech engine
+        const cleanText = commentaryText.replace(/[🔨💰]/g, '').trim();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        
+        const voices = window.speechSynthesis.getVoices();
+        // Try to find a nice English voice
+        const englishVoice = voices.find(v => v.lang.startsWith('en'));
+        if (englishVoice) {
+          utterance.voice = englishVoice;
+        }
+        utterance.rate = 1.05; // Slightly faster for realistic fast-paced auction rhythm
+        utterance.pitch = 1.0;
+
+        window.speechSynthesis.speak(utterance);
+      }, delay);
+    }
+  }, [commentaryText, isTtsEnabled, room?.status, room?.timer]);
+
+  // Cleanup synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (speechTimeoutRef.current) {
+        clearTimeout(speechTimeoutRef.current);
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   // Onboarding Setup view
   if (isOnboarding) {
@@ -610,13 +709,39 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                       </div>
                     </div>
 
-                    {/* Commentary ticker bubble */}
-                    <div className="hidden xl:flex items-center gap-2.5 bg-primary/5 px-4 py-2.5 rounded-2xl border border-primary/10 max-w-[320px] min-w-0 select-none">
-                      <Mic className="w-4 h-4 text-primary shrink-0 animate-pulse" />
-                      <span className="text-zinc-300 text-xs font-semibold italic truncate">
-                        "{getCommentarySpeech()}"
-                      </span>
-                    </div>
+                    {/* Interactive Commentary voice/mic ticker */}
+                    <button
+                      onClick={toggleTts}
+                      title={isTtsEnabled ? "Mute live voice commentary" : "Unmute live voice commentary"}
+                      className={`hidden lg:flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all duration-300 max-w-[320px] min-w-0 select-none cursor-pointer outline-none text-left ${
+                        isTtsEnabled
+                          ? 'bg-primary/15 border-primary/45 shadow-[0_0_15px_rgba(251,191,36,0.15)] hover:bg-primary/20 hover:scale-[1.02]'
+                          : 'bg-zinc-950/20 border-border/40 hover:border-zinc-700 hover:bg-zinc-900/20 hover:scale-[1.02]'
+                      }`}
+                    >
+                      <div className="relative flex items-center justify-center shrink-0">
+                        {isTtsEnabled ? (
+                          <>
+                            {/* Double pulsing ring wave */}
+                            <span className="absolute inline-flex h-full w-full rounded-full bg-primary/30 animate-ping" />
+                            <span className="absolute inline-flex h-5 w-5 rounded-full bg-primary/20 animate-pulse" />
+                            <Mic className="w-4 h-4 text-primary relative z-10 shrink-0" />
+                          </>
+                        ) : (
+                          <MicOff className="w-4 h-4 text-zinc-500 shrink-0" />
+                        )}
+                      </div>
+                      <div className="flex flex-col items-start min-w-0">
+                        <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500 leading-none">
+                          {isTtsEnabled ? 'Live Audio ON' : 'Audio Muted'}
+                        </span>
+                        <span className={`text-xs font-semibold italic truncate w-full mt-0.5 transition-colors ${
+                          isTtsEnabled ? 'text-zinc-200' : 'text-zinc-400'
+                        }`}>
+                          "{commentaryText || 'Click to play audio commentary'}"
+                        </span>
+                      </div>
+                    </button>
                   </div>
 
                 </div>
