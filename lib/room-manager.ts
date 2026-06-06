@@ -60,9 +60,10 @@ function shuffleArray<T>(array: T[]): T[] {
 export class RoomManager {
   private rooms: Map<string, RoomState> = new Map();
 
-  createRoom(roomId: string, maxTeams: number = 6, budget: number = 100, timerDuration: number = 15, poolSize: number = 15): RoomState {
-    // Shuffle and pick players
-    const selectedPool = shuffleArray(PLAYER_POOL).slice(0, poolSize);
+  createRoom(roomId: string, maxTeams: number = 6, budget: number = 100, timerDuration: number = 15, poolSize: number = PLAYER_POOL.length): RoomState {
+    // Shuffle and pick players (use all players for the room)
+    const selectedPool = shuffleArray(PLAYER_POOL);
+    const actualPoolSize = PLAYER_POOL.length;
     
     const newRoom: RoomState = {
       id: roomId,
@@ -72,7 +73,7 @@ export class RoomManager {
         budget,
         timerDuration,
         maxOverseas: 6,
-        poolSize
+        poolSize: actualPoolSize
       },
       participants: [],
       currentBid: 0,
