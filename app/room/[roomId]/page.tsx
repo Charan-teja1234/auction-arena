@@ -16,10 +16,125 @@ import {
   UserPlus, ShieldAlert, Wifi, Check, MessageSquare, Mic, MicOff, ListCollapse, LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
 interface PageParams {
   roomId: string;
 }
+
+// Web Audio API Synthesizers for Offline-compatible Dynamic Sound Effects
+const playHammerSound = () => {
+  if (typeof window === 'undefined') return;
+  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContextClass) return;
+  
+  try {
+    const ctx = new AudioContextClass();
+    
+    // Primary heavy low-mid golpe
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(280, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(70, ctx.currentTime + 0.18);
+    
+    gain.gain.setValueAtTime(0.85, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.18);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.18);
+    
+    // Soft bounce reflection a fraction later
+    setTimeout(() => {
+      const oscReflect = ctx.createOscillator();
+      const gainReflect = ctx.createGain();
+      oscReflect.type = 'triangle';
+      oscReflect.frequency.setValueAtTime(220, ctx.currentTime);
+      oscReflect.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.1);
+      
+      gainReflect.gain.setValueAtTime(0.35, ctx.currentTime);
+      gainReflect.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.1);
+      
+      oscReflect.connect(gainReflect);
+      gainReflect.connect(ctx.destination);
+      oscReflect.start();
+      oscReflect.stop(ctx.currentTime + 0.1);
+    }, 75);
+  } catch (e) {
+    console.error("Failed to play hammer sound", e);
+  }
+};
+
+const playApplauseSound = () => {
+  if (typeof window === 'undefined') return;
+  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContextClass) return;
+  
+  try {
+    const ctx = new AudioContextClass();
+    const bufferSize = ctx.sampleRate * 1.5; // 1.5s applause wash
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    
+    // Generate white noise data
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    
+    const noiseNode = ctx.createBufferSource();
+    noiseNode.buffer = buffer;
+    
+    // Bandpass filter to make noise sound more like a crowd clapping/cheering
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(950, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 1.2);
+    filter.Q.setValueAtTime(1.5, ctx.currentTime);
+    
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.25); // Gentle fade-in
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5); // Decay
+    
+    noiseNode.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    
+    noiseNode.start();
+    noiseNode.stop(ctx.currentTime + 1.5);
+  } catch (e) {
+    console.error("Failed to play applause sound", e);
+  }
+};
+
+const playTickSound = () => {
+  if (typeof window === 'undefined') return;
+  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContextClass) return;
+  
+  try {
+    const ctx = new AudioContextClass();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1300, ctx.currentTime); // High pitch tick click
+    
+    gain.gain.setValueAtTime(0.07, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start();
+    osc.stop(ctx.currentTime + 0.04);
+  } catch (e) {
+    console.error("Failed to play tick sound", e);
+  }
+};
 
 function RoomPageContent({ params }: { params: Promise<PageParams> }) {
   const router = useRouter();
@@ -248,27 +363,62 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
     return p ? p.teamName : 'AI Franchise';
   };
 
-  // Generate Auctioneer commentary text dynamically
+  // Stable hash-based selector for randomized but deterministic state phrases
+  const getStablePhrase = (phrases: string[], keySeed: string | number) => {
+    const str = String(keySeed);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const idx = Math.abs(hash) % phrases.length;
+    return phrases[idx];
+  };
+
+  // Generate Auctioneer commentary text dynamically with rich randomized vocabulary
   const getCommentarySpeech = () => {
     if (!room) return '';
     const activePlayer = room.playerPool[room.activePlayerIndex];
     if (!activePlayer) return "Welcome to the IPL Auction Arena podium.";
 
-    const highestBidderName = getBidderName(room.highestBidderId);
+    const highestBidderName = getBidderName(room.highestBidderId) || 'AI Franchise';
+    const bidCount = room.bidHistory.length;
+    const seed = activePlayer ? activePlayer.id : 'default';
 
     switch (room.status) {
       case 'LOBBY':
         return `Draft pool ready: ${room.playerPool.length} elite cricketers.`;
-      case 'REVEAL':
-        return `Podium reveal: ${activePlayer.name} (Base Price: ${activePlayer.basePrice.toFixed(2)} Cr).`;
+      case 'REVEAL': {
+        const revealPhrases = [
+          `Up next on the block, it's the ${activePlayer.nationality} ${activePlayer.role}, ${activePlayer.name}! Base price is set at ${activePlayer.basePrice.toFixed(2)} Crore.`,
+          `Cricketer number ${room.activePlayerIndex + 1} onto the podium: ${activePlayer.name}! A high-rated ${activePlayer.role} starting at ${activePlayer.basePrice.toFixed(2)} Crore.`,
+          `Let's welcome ${activePlayer.name} to the bidding ring. Rated ${activePlayer.rating}, starting at ${activePlayer.basePrice.toFixed(2)} Crore. Do I hear an opening bid?`
+        ];
+        return getStablePhrase(revealPhrases, seed);
+      }
       case 'BIDDING':
         if (room.currentBid === 0) {
-          return `Opening bid is ${activePlayer.basePrice.toFixed(2)} Cr for ${activePlayer.name}.`;
+          const openingPhrases = [
+            `Opening bid is requested at ${activePlayer.basePrice.toFixed(2)} Cr for ${activePlayer.name}.`,
+            `Do I hear an opening paddle of ${activePlayer.basePrice.toFixed(2)} Crore for ${activePlayer.name}?`,
+            `Looking for ${activePlayer.basePrice.toFixed(2)} Crore to get us started for ${activePlayer.name}.`
+          ];
+          return getStablePhrase(openingPhrases, seed);
         }
         if (room.timer > 10) {
-          return `${room.currentBid.toFixed(2)} Cr bid by ${highestBidderName}.`;
+          const normalBidPhrases = [
+            `${room.currentBid.toFixed(2)} Crore bid by ${highestBidderName}!`,
+            `We have ${room.currentBid.toFixed(2)} Crore on the board from ${highestBidderName}!`,
+            `${highestBidderName} takes the lead at ${room.currentBid.toFixed(2)} Crore!`,
+            `New bid! ${highestBidderName} raises it to ${room.currentBid.toFixed(2)} Crore.`
+          ];
+          return getStablePhrase(normalBidPhrases, bidCount + seed);
         } else if (room.timer > 5) {
-          return `${highestBidderName} leads at ${room.currentBid.toFixed(2)} Cr.`;
+          const hotBidPhrases = [
+            `${highestBidderName} holds the leading bid of ${room.currentBid.toFixed(2)} Crore. Any challengers?`,
+            `At ${room.currentBid.toFixed(2)} Crore by ${highestBidderName}. The clock is running!`,
+            `Bidding slows down at ${room.currentBid.toFixed(2)} Crore. ${highestBidderName} is in front.`
+          ];
+          return getStablePhrase(hotBidPhrases, bidCount + seed);
         } else if (room.timer === 4 || room.timer === 5) {
           return `At ${room.currentBid.toFixed(2)} Crore by ${highestBidderName}... once!`;
         } else if (room.timer === 2 || room.timer === 3) {
@@ -276,10 +426,21 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
         } else {
           return `Fair warning! Selling ${activePlayer.name} at ${room.currentBid.toFixed(2)} Crore...`;
         }
-      case 'SOLD':
-        return `🔨 SOLD! ${activePlayer.name} goes to ${highestBidderName} for ${room.currentBid.toFixed(2)} Cr!`;
-      case 'UNSOLD':
-        return `🔨 Cricketer ${activePlayer.name} goes UNSOLD.`;
+      case 'SOLD': {
+        const soldPhrases = [
+          `🔨 SOLD! ${activePlayer.name} goes to ${highestBidderName} for ${room.currentBid.toFixed(2)} Crore!`,
+          `🔨 SOLD! ${highestBidderName} wins the battle for ${activePlayer.name} at ${room.currentBid.toFixed(2)} Crore!`,
+          `🔨 Hammer falls! ${activePlayer.name} joins ${highestBidderName} for ${room.currentBid.toFixed(2)} Crore!`
+        ];
+        return getStablePhrase(soldPhrases, seed + highestBidderName);
+      }
+      case 'UNSOLD': {
+        const unsoldPhrases = [
+          `🔨 Cricketer ${activePlayer.name} goes UNSOLD. Passed by the franchises.`,
+          `🔨 No bids placed for ${activePlayer.name}. He goes UNSOLD back into the pool.`
+        ];
+        return getStablePhrase(unsoldPhrases, seed);
+      }
       case 'COMPLETED':
         return "The auction has ended! Check final standings.";
       default:
@@ -289,8 +450,12 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
 
   // Text-to-Speech (TTS) voice synthesis states, refs, and controls
   const [isTtsEnabled, setIsTtsEnabled] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const lastSpokenRef = useRef('');
   const speechTimeoutRef = useRef<any>(null);
+  const prevStatusRef = useRef('');
+  const prevTimerRef = useRef(-1);
+
   const commentaryText = getCommentarySpeech();
 
   // TTS Toggle action
@@ -317,7 +482,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
     };
   }, []);
 
-  // Web Speech API Synthesis Trigger Effect (with debouncing for fast bidding)
+  // Web Speech API Synthesis Trigger Effect with urgency-based rate/pitch modulation
   useEffect(() => {
     if (!isTtsEnabled) {
       if (speechTimeoutRef.current) {
@@ -327,6 +492,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
+      setIsSpeaking(false);
       return;
     }
 
@@ -351,7 +517,10 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
       const delay = isCritical ? 50 : 250;
 
       speechTimeoutRef.current = setTimeout(() => {
-        if (!isTtsEnabled) return;
+        if (!isTtsEnabled) {
+          setIsSpeaking(false);
+          return;
+        }
 
         // Cancel any ongoing speaking to keep audio commentary synchronized
         window.speechSynthesis.cancel();
@@ -359,20 +528,69 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
         // Clean emojis and format text for text-to-speech engine
         const cleanText = commentaryText.replace(/[🔨💰]/g, '').trim();
         const utterance = new SpeechSynthesisUtterance(cleanText);
+
+        // Track speaking state
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
         
         const voices = window.speechSynthesis.getVoices();
-        // Try to find a nice English voice
-        const englishVoice = voices.find(v => v.lang.startsWith('en'));
-        if (englishVoice) {
-          utterance.voice = englishVoice;
+        
+        // Prioritize Indian-accented English voice for standard IPL flavor
+        let preferredVoice = voices.find(v => v.lang === 'en-IN' || v.name.includes('India') || v.name.includes('Google India'));
+        if (!preferredVoice) {
+          preferredVoice = voices.find(v => v.lang.startsWith('en'));
         }
-        utterance.rate = 1.05; // Slightly faster for realistic fast-paced auction rhythm
-        utterance.pitch = 1.0;
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+        }
+
+        // Urgency-based speed and pitch modulation
+        if (room?.status === 'SOLD' || room?.status === 'UNSOLD') {
+          utterance.rate = 0.95;  // Booming, slow gavel call
+          utterance.pitch = 0.95;
+        } else if (room?.timer !== undefined && room.timer <= 5 && room.status === 'BIDDING') {
+          utterance.rate = 1.25;  // Fast-paced high tension countdown
+          utterance.pitch = 1.1;  // Rising tone
+        } else {
+          utterance.rate = 1.08;  // Normal balanced pace
+          utterance.pitch = 1.0;
+        }
 
         window.speechSynthesis.speak(utterance);
       }, delay);
     }
   }, [commentaryText, isTtsEnabled, room?.status, room?.timer]);
+
+  // Trigger sound effects separately in a dedicated React effect
+  useEffect(() => {
+    if (!isTtsEnabled || !room) return;
+
+    // 1. Hammer fall sound on SOLD or UNSOLD
+    if (room.status !== prevStatusRef.current) {
+      if (room.status === 'SOLD' || room.status === 'UNSOLD') {
+        playHammerSound();
+        
+        // Dynamic crowd applause on high-stakes deals! (>= 8 Crore)
+        if (room.status === 'SOLD' && room.currentBid >= 8.0) {
+          setTimeout(() => {
+            playApplauseSound();
+          }, 180);
+        }
+      }
+      prevStatusRef.current = room.status;
+    }
+
+    // 2. Heartbeat tick sound on final warning seconds (under 4 seconds)
+    if (room.status === 'BIDDING' && room.timer <= 3 && room.timer > 0) {
+      if (room.timer !== prevTimerRef.current) {
+        playTickSound();
+        prevTimerRef.current = room.timer;
+      }
+    } else {
+      prevTimerRef.current = room.timer;
+    }
+  }, [room?.status, room?.timer, room?.currentBid, isTtsEnabled]);
 
   // Cleanup synthesis on unmount
   useEffect(() => {
@@ -383,8 +601,25 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
       if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
+      setIsSpeaking(false);
     };
   }, []);
+
+  // Dopamine/Reward effects: Confetti when local player wins a bid!
+  const confettiStatusRef = useRef('');
+  useEffect(() => {
+    if (!room) return;
+    if (room.status === 'SOLD' && confettiStatusRef.current !== 'SOLD') {
+      if (room.highestBidderId === playerId) {
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      }
+    }
+    confettiStatusRef.current = room.status;
+  }, [room?.status, room?.highestBidderId, playerId]);
 
   // Onboarding Setup view
   if (isOnboarding) {
@@ -663,7 +898,13 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
             
             {/* 1. HORIZONTAL ACTION BOARD (ALWAYS ON TOP) */}
             {activePlayer && isBiddingActive && (
-              <div className="w-full bg-card border border-border/80 p-4 md:p-6 rounded-3xl flex flex-col lg:flex-row items-center gap-4 lg:gap-6 justify-between shrink-0 shadow-xl select-none min-h-[96px]">
+              <div className={`w-full bg-card p-4 md:p-6 rounded-3xl flex flex-col lg:flex-row items-center gap-4 lg:gap-6 justify-between shrink-0 shadow-xl select-none min-h-[96px] transition-all duration-300 border ${
+                room.timer <= 5 && room.status === 'BIDDING'
+                  ? activePlayer.popularity >= 8
+                    ? 'border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.35)] animate-pulse'
+                    : 'border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.25)] animate-pulse'
+                  : 'border-border/80'
+              }`}>
                 
                 {/* Responsive wrapper to keep Section A & B grouped on mobile/tablet */}
                 <div className="flex flex-col md:flex-row lg:contents gap-4 md:gap-6 w-full lg:w-auto">
@@ -680,7 +921,11 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                     </div>
 
                     {/* Timer Box */}
-                    <div className="flex items-center gap-2 bg-background border border-border/80 px-3.5 py-2 rounded-2xl shrink-0 shadow-inner">
+                    <div className={`flex items-center gap-2 bg-background border px-3.5 py-2 rounded-2xl shrink-0 shadow-inner transition-all duration-300 ${
+                      room.timer <= 5 && room.status === 'BIDDING'
+                        ? 'border-red-600 shadow-[0_0_15px_rgba(239,68,68,0.7)] scale-110'
+                        : 'border-border/80'
+                    }`}>
                       {room.status === 'BIDDING' && (
                         <span className={`h-2.5 w-2.5 rounded-full ${room.timer <= 5 ? 'bg-red-500 animate-ping' : 'bg-primary'}`} />
                       )}
@@ -709,23 +954,43 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                       </div>
                     </div>
 
-                    {/* Interactive Commentary voice/mic ticker */}
+                    {/* Interactive Commentary voice/mic ticker with live soundwave visualizer */}
                     <button
                       onClick={toggleTts}
                       title={isTtsEnabled ? "Mute live voice commentary" : "Unmute live voice commentary"}
-                      className={`hidden lg:flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all duration-300 max-w-[320px] min-w-0 select-none cursor-pointer outline-none text-left ${
+                      className={`hidden lg:flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all duration-300 max-w-[420px] flex-1 min-w-0 select-none cursor-pointer outline-none text-left ${
                         isTtsEnabled
                           ? 'bg-primary/15 border-primary/45 shadow-[0_0_15px_rgba(251,191,36,0.15)] hover:bg-primary/20 hover:scale-[1.02]'
                           : 'bg-zinc-950/20 border-border/40 hover:border-zinc-700 hover:bg-zinc-900/20 hover:scale-[1.02]'
                       }`}
                     >
-                      <div className="relative flex items-center justify-center shrink-0">
+                      {/* Self-contained keyframes animation style block */}
+                      <style dangerouslySetInnerHTML={{ __html: `
+                        @keyframes soundWave {
+                          0%, 100% { height: 25%; }
+                          50% { height: 100%; }
+                        }
+                      `}} />
+
+                      <div className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-full bg-background/50 border border-border/60">
                         {isTtsEnabled ? (
                           <>
-                            {/* Double pulsing ring wave */}
-                            <span className="absolute inline-flex h-full w-full rounded-full bg-primary/30 animate-ping" />
-                            <span className="absolute inline-flex h-5 w-5 rounded-full bg-primary/20 animate-pulse" />
-                            <Mic className="w-4 h-4 text-primary relative z-10 shrink-0" />
+                            {isSpeaking ? (
+                              /* Active live voice wave indicator */
+                              <div className="flex items-end gap-[2px] h-3.5 w-4 justify-center">
+                                <span className="w-[2px] bg-primary rounded-full animate-[soundWave_0.6s_ease-in-out_infinite]" style={{ height: '30%' }} />
+                                <span className="w-[2px] bg-primary rounded-full animate-[soundWave_0.6s_ease-in-out_0.15s_infinite]" style={{ height: '80%' }} />
+                                <span className="w-[2px] bg-primary rounded-full animate-[soundWave_0.6s_ease-in-out_0.3s_infinite]" style={{ height: '100%' }} />
+                                <span className="w-[2px] bg-primary rounded-full animate-[soundWave_0.6s_ease-in-out_0.45s_infinite]" style={{ height: '50%' }} />
+                                <span className="w-[2px] bg-primary rounded-full animate-[soundWave_0.6s_ease-in-out_0.6s_infinite]" style={{ height: '20%' }} />
+                              </div>
+                            ) : (
+                              <>
+                                {/* Standby state */}
+                                <span className="absolute inline-flex h-full w-full rounded-full bg-primary/30 animate-ping" />
+                                <Mic className="w-4 h-4 text-primary relative z-10 shrink-0" />
+                              </>
+                            )}
                           </>
                         ) : (
                           <MicOff className="w-4 h-4 text-zinc-500 shrink-0" />
@@ -733,9 +998,9 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                       </div>
                       <div className="flex flex-col items-start min-w-0">
                         <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500 leading-none">
-                          {isTtsEnabled ? 'Live Audio ON' : 'Audio Muted'}
+                          {isTtsEnabled ? (isSpeaking ? 'Auctioneer Speaking' : 'Live Audio ON') : 'Audio Muted'}
                         </span>
-                        <span className={`text-xs font-semibold italic truncate w-full mt-0.5 transition-colors ${
+                        <span className={`text-xs font-semibold italic whitespace-normal line-clamp-2 w-full mt-0.5 transition-colors ${
                           isTtsEnabled ? 'text-zinc-200' : 'text-zinc-400'
                         }`}>
                           "{commentaryText || 'Click to play audio commentary'}"
