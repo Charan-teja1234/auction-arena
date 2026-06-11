@@ -80,7 +80,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               "name": "auctionbidding11",
-              "alternateName": ["Auction Bidding 11", "auctionbidding 11", "IPL Auction Arena"],
+              "alternateName": ["Auction Bidding 11", "auctionbidding 11", "auctionbidding11"],
               "url": "https://auctionbidding11.onrender.com/",
             }),
           }}
