@@ -200,10 +200,11 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
   const [notifications, setNotifications] = useState<UIBlockNotification[]>([]);
   const [isConfirmLeaveOpen, setIsConfirmLeaveOpen] = useState(false);
 
-  // Load identity values
+  // Load identity values and automatically bypass onboarding if they already exist in local storage
   useEffect(() => {
     if (name) {
       setManagerName(name);
+      setIsOnboarding(false);
     } else {
       setIsOnboarding(true);
     }
