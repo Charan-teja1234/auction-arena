@@ -274,7 +274,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
         const isSpectatorText = p.isSpectator ? ' (Spectator)' : '';
         const nameText = p.name;
         const teamText = p.isSpectator ? '' : ` [${p.teamName}]`;
-        const message = `${nameText}${teamText}${isSpectatorText} left the bidding arena.`;
+        const message = `${nameText}${teamText}${isSpectatorText} left auctionbidding11.`;
 
         const newNotification: UIBlockNotification = {
           id,
@@ -374,7 +374,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
   const getCommentarySpeech = () => {
     if (!room) return '';
     const activePlayer = room.playerPool[room.activePlayerIndex];
-    if (!activePlayer) return "Welcome to the IPL Auction Arena podium.";
+    if (!activePlayer) return "Welcome to auctionbidding11.";
 
     const highestBidderName = getBidderName(room.highestBidderId) || 'AI Franchise';
     const bidCount = room.bidHistory.length;
@@ -632,7 +632,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
           <div className="absolute top-0 left-0 w-full h-1.5 bg-primary" />
 
           <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-white uppercase tracking-tight">Arena Registration</h3>
+            <h3 className="text-xl font-bold text-white uppercase tracking-tight">auctionbidding11 Registration</h3>
             <p className="text-xs text-zinc-500 mt-1">
               You are joining Room <span className="text-primary font-bold">{roomId}</span>. Setup your manager details.
             </p>
@@ -713,7 +713,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-zinc-400 gap-3 font-sans">
         <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <span className="text-sm font-bold animate-pulse">Connecting to Arena {roomId}...</span>
+        <span className="text-sm font-bold animate-pulse">Connecting to room {roomId}...</span>
       </div>
     );
   }
@@ -816,7 +816,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none" />
                 <h3 className="font-extrabold text-white text-lg flex items-center gap-2">
                   <Trophy className="w-5 h-5 text-primary" />
-                  Arena Rules & Configuration
+                  auctionbidding11 Rules & Configuration
                 </h3>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
@@ -899,7 +899,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                       onClick={startAuction}
                       className="bg-primary hover:bg-primary/95 text-background font-black text-xs px-6 py-2.5 rounded-xl flex items-center gap-1.5 ml-auto cursor-pointer shadow-lg shadow-primary/10"
                     >
-                      <Play className="w-4 h-4 fill-current" /> Start Auction Arena
+                      <Play className="w-4 h-4 fill-current" /> Start auctionbidding11
                     </button>
                   </div>
                 ) : (
@@ -1239,7 +1239,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                   }}
                   className="flex-1 bg-red-600 hover:bg-red-500 text-white font-black py-2.5 rounded-xl text-xs cursor-pointer transition-colors shadow-lg shadow-red-600/10"
                 >
-                  Leave Arena
+                  Leave Room
                 </button>
               </div>
             </motion.div>
