@@ -200,24 +200,12 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
   const [notifications, setNotifications] = useState<UIBlockNotification[]>([]);
   const [isConfirmLeaveOpen, setIsConfirmLeaveOpen] = useState(false);
 
-  // Load identity values and automatically bypass onboarding if they already exist in local storage
+  // Load identity values to pre-populate inputs if they exist in local storage
   useEffect(() => {
-    if (name) {
-      setManagerName(name);
-      setIsOnboarding(false);
-    } else {
-      setIsOnboarding(true);
-    }
+    if (name) setManagerName(name);
     if (teamName) setFranchiseName(teamName);
     if (avatarId) setSelectedAvatarId(avatarId);
   }, [name, teamName, avatarId]);
-
-  // Bypass onboarding if they are already in the participants list
-  useEffect(() => {
-    if (room && isAlreadyParticipant) {
-      setIsOnboarding(false);
-    }
-  }, [room, isAlreadyParticipant]);
 
   // Automatically select the first available avatar if the current one is taken
   useEffect(() => {
