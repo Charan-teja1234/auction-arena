@@ -49,6 +49,78 @@ export interface RoomState {
   chat: ChatMessage[];
 }
 
+const BOT_BID_MESSAGES: Record<string, string[]> = {
+  MI_NITA: [
+    "A perfect addition to the Paltan! We must bid.",
+    "This player fits our champion DNA. Raising the paddle!",
+    "MI means business. Let's go!",
+    "No backing down for superstar talent!"
+  ],
+  RCB_BOLD: [
+    "Bold play only! We are going all-in for this superstar!",
+    "Ee Sala Cup Namde! We need this batsman!",
+    "Let's raise the heat! Raising the bid!",
+    "Can't let this player go. Bid up!"
+  ],
+  CSK_THALA: [
+    "Experience is key. Calm and calculated bid.",
+    "A valuable addition to the Yellow Army.",
+    "Thala's wisdom: Bid patiently. Paddle up.",
+    "Let's secure this experienced class."
+  ],
+  SRH_KAVYA: [
+    "Absolute power-hitter, we had to raise the paddle!",
+    "An elite overseas star, just what SRH needs!",
+    "Bidding with orange fire! Let's get him.",
+    "We need this explosive strength in our lineup!"
+  ],
+  KKR_SRK: [
+    "Korbo Lorbo Jeetbo! A perfect spin/all-round talent.",
+    "Bidding smart, bidding late. Let's win this.",
+    "Adding magic and class to the Knights!",
+    "Budget-conscious but we want this player!"
+  ],
+  PBKS_PREITY: [
+    "Woohoo! What a talent! We are bidding!",
+    "Young, fast, energetic. Perfect for Punjab Kings!",
+    "Let's make some noise! Raising the bid!",
+    "A wildcard bid, but I love the energy!"
+  ]
+};
+
+const BOT_WIN_MESSAGES: Record<string, string[]> = {
+  MI_NITA: [
+    "🔨 Secured! Welcome to the Mumbai Indians family! 💙",
+    "🔨 A masterclass buy. The Paltan is stronger today!",
+    "🔨 Absolute steal for our squad balance!"
+  ],
+  RCB_BOLD: [
+    "🔨 Play Bold! Got our target superstar! ❤️",
+    "🔨 Welcome to RCB! The fans are going to love this!",
+    "🔨 The trophy is coming closer. Ee Sala Cup Namde!"
+  ],
+  CSK_THALA: [
+    "🔨 Calmly secured. Welcome to Chennai! 💛",
+    "🔨 Another experienced champ joins the Yellow Brigade. Den we go!",
+    "🔨 Smart buy at the right price. Trust the process."
+  ],
+  SRH_KAVYA: [
+    "🔨 Boom! Got him! Welcome to the Sunrisers! 🧡",
+    "🔨 The Orange Army gets stronger with this explosive buy!",
+    "🔨 Thrilled to win this bidding battle!"
+  ],
+  KKR_SRK: [
+    "🔨 Ami KKR! Got our star Knight! 💜",
+    "🔨 Welcome to Eden Gardens! What an addition.",
+    "🔨 Perfectly executed plan. Welcome to the squad!"
+  ],
+  PBKS_PREITY: [
+    "🔨 Oh my god, yes! Got him! Punjab Kings represent! ❤️🦁",
+    "🔨 So happy to win this bid! Welcome to the team!",
+    "🔨 Woohoo! Let's celebrate this awesome signing!"
+  ]
+};
+
 function shuffleArray<T>(array: T[]): T[] {
   const arr = [...array];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -61,9 +133,9 @@ function shuffleArray<T>(array: T[]): T[] {
 export class RoomManager {
   private rooms: Map<string, RoomState> = new Map();
 
-  createRoom(roomId: string, maxTeams: number = 6, budget: number = 100, timerDuration: number = 15, poolSize: number = PLAYER_POOL.length): RoomState {
-    // Shuffle and pick players (use all players for the room)
-    const selectedPool = shuffleArray(PLAYER_POOL);
+  createRoom(roomId: string, maxTeams: number = 6, budget: number = 100, timerDuration: number = 10, poolSize: number = PLAYER_POOL.length): RoomState {
+    // Shuffle and pick players (use all players for the room, sorted by popularity descending)
+    const selectedPool = shuffleArray(PLAYER_POOL).sort((a, b) => b.popularity - a.popularity);
     const actualPoolSize = PLAYER_POOL.length;
     
     const newRoom: RoomState = {
@@ -330,7 +402,7 @@ export class RoomManager {
 
     room.status = 'REVEAL';
     room.activePlayerIndex = 0;
-    room.timer = 4; // 4 seconds reveal animation
+    room.timer = 2; // 2 seconds reveal animation
     room.currentBid = 0;
     room.highestBidderId = null;
     room.bidHistory = [];
@@ -382,7 +454,7 @@ export class RoomManager {
 
     // Avoid self-bidding
     if (room.highestBidderId === bidderId) {
-      return { success: false, room, message: "You are already the highest bidder!" };
+      return { success: true, room };
     }
 
     // Validate roster rules (e.g. overseas count)
@@ -413,9 +485,17 @@ export class RoomManager {
     };
     room.bidHistory.push(bidItem);
 
-    // Anti-sniping timer extension
-    if (room.timer < 5) {
-      room.timer = 5;
+    // Anti-sniping timer extension (shrinks as the bidding war goes on to spike adrenaline)
+    const bidCount = room.bidHistory.length;
+    let extension = 4;
+    if (bidCount > 10) {
+      extension = 2; // Split-second 2s reactions above 10 bids
+    } else if (bidCount > 5) {
+      extension = 3; // Tight 3s window above 5 bids
+    }
+
+    if (room.timer < extension) {
+      room.timer = extension;
     }
 
     // System comment
@@ -426,6 +506,23 @@ export class RoomManager {
       timestamp: Date.now(),
       type: 'system'
     });
+
+    // Personality-driven bot chat comment (15% chance on bids)
+    if (bidder.isAI && bidder.aiPersonality) {
+      if (Math.random() < 0.15) {
+        const messages = BOT_BID_MESSAGES[bidder.aiPersonality];
+        if (messages) {
+          const msg = messages[Math.floor(Math.random() * messages.length)];
+          room.chat.push({
+            senderId: bidderId,
+            senderName: bidder.name,
+            message: msg,
+            timestamp: Date.now() + 10,
+            type: 'text'
+          });
+        }
+      }
+    }
 
     return { success: true, room };
   }
@@ -493,8 +590,9 @@ export class RoomManager {
 
         const evalResult = evaluatePlayerForAI(player, ai, room.currentBid, room.settings);
         if (evalResult.shouldBid) {
-          // Add some reaction delay - 60% chance to bid this second
-          if (Math.random() < 0.65) {
+          // React faster under time pressure (85% chance if timer <= 3, 65% otherwise)
+          const bidChance = room.timer <= 3 ? 0.85 : 0.65;
+          if (Math.random() < bidChance) {
             this.placeBid(roomId, ai.id);
             bidPlacedThisTick = true;
             break; // Stop and broadcast this bid
@@ -516,7 +614,7 @@ export class RoomManager {
             winner.roster.push(player);
             
             room.status = 'SOLD';
-            room.timer = 4; // 4 seconds sold animation/commentary
+            room.timer = 2; // 2 seconds sold animation/commentary
             
             room.chat.push({
               senderId: 'system',
@@ -525,10 +623,24 @@ export class RoomManager {
               timestamp: Date.now(),
               type: 'system'
             });
+
+            if (winner.isAI && winner.aiPersonality) {
+              const messages = BOT_WIN_MESSAGES[winner.aiPersonality];
+              if (messages) {
+                const msg = messages[Math.floor(Math.random() * messages.length)];
+                room.chat.push({
+                  senderId: winner.id,
+                  senderName: winner.name,
+                  message: msg,
+                  timestamp: Date.now() + 50,
+                  type: 'text'
+                });
+              }
+            }
           } else {
             // Fallback
             room.status = 'UNSOLD';
-            room.timer = 4;
+            room.timer = 2;
           }
         } else {
           room.status = 'UNSOLD';
@@ -564,7 +676,7 @@ export class RoomManager {
           });
         } else {
           room.status = 'REVEAL';
-          room.timer = 4;
+          room.timer = 2;
           room.currentBid = 0;
           room.highestBidderId = null;
           room.bidHistory = [];
