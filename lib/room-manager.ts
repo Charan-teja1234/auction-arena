@@ -263,7 +263,7 @@ export class RoomManager {
         room.chat.push({
           senderId: 'system',
           senderName: 'Auctioneer',
-          message: `${participant.name} (${participant.teamName}) has entered the Arena!`,
+          message: `${participant.name} (${participant.teamName}) has entered auctionbidding11!`,
           timestamp: Date.now(),
           type: 'system'
         });
