@@ -33,10 +33,10 @@ export function analyzeRoster(roster: Player[]): RosterAnalysis {
 
 // Calculate the minimum increment based on current bid
 export function getMinIncrement(currentBid: number): number {
+  if (currentBid < 1.0) return 0.05; // +5L
   if (currentBid < 2.0) return 0.10; // +10L
   if (currentBid < 5.0) return 0.20; // +20L
-  if (currentBid < 10.0) return 0.50; // +50L
-  return 1.0; // +1.0Cr
+  return 0.50; // +50L
 }
 
 export interface AITeam {
