@@ -19,13 +19,18 @@ export default function LandingPage() {
   // Zustand Store
   const { name, teamName } = useAuctionStore();
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Local Onboarding Form states
   const [roomCode, setRoomCode] = useState('');
 
   // Custom Room Settings
   const [maxTeams, setMaxTeams] = useState(6);
   const [startingBudget, setStartingBudget] = useState(100);
-  const [timerDuration, setTimerDuration] = useState(15);
+  const [timerDuration, setTimerDuration] = useState(10);
   const [poolSize, setPoolSize] = useState(300);
 
   // Configuration Panel view states
@@ -115,7 +120,7 @@ export default function LandingPage() {
           </span>
         </div>
         <div className="flex items-center gap-3 md:gap-4 select-none">
-          {name && (
+          {mounted && name && (
             <div className="hidden sm:flex items-center gap-2.5 bg-card/70 px-4 py-2 rounded-full border border-border">
               <span className="h-2 w-2 rounded-full bg-cricket-green animate-pulse" />
               <span className="text-xs font-black text-zinc-300">
