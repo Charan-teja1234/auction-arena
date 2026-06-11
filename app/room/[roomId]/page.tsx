@@ -11,9 +11,9 @@ import TeamList from '../../../components/TeamList';
 import BiddingControls from '../../../components/BiddingControls';
 import ChatPanel from '../../../components/ChatPanel';
 import TeamSummary from '../../../components/TeamSummary';
-import { 
-  Trophy, Users, Share2, Copy, Play, ArrowLeft, 
-  UserPlus, ShieldAlert, Wifi, Check, MessageSquare, Mic, MicOff, ListCollapse, LogOut
+import {
+  Trophy, Users, Share2, Copy, Play, ArrowLeft,
+  UserPlus, ShieldAlert, Wifi, Check, MessageSquare, Mic, MicOff, ListCollapse, LogOut, Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
@@ -27,26 +27,26 @@ const playHammerSound = () => {
   if (typeof window === 'undefined') return;
   const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
   if (!AudioContextClass) return;
-  
+
   try {
     const ctx = new AudioContextClass();
-    
+
     // Primary heavy low-mid golpe
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(280, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(70, ctx.currentTime + 0.18);
-    
+
     gain.gain.setValueAtTime(0.85, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.18);
-    
+
     osc.connect(gain);
     gain.connect(ctx.destination);
-    
+
     osc.start();
     osc.stop(ctx.currentTime + 0.18);
-    
+
     // Soft bounce reflection a fraction later
     setTimeout(() => {
       const oscReflect = ctx.createOscillator();
@@ -54,10 +54,10 @@ const playHammerSound = () => {
       oscReflect.type = 'triangle';
       oscReflect.frequency.setValueAtTime(220, ctx.currentTime);
       oscReflect.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.1);
-      
+
       gainReflect.gain.setValueAtTime(0.35, ctx.currentTime);
       gainReflect.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.1);
-      
+
       oscReflect.connect(gainReflect);
       gainReflect.connect(ctx.destination);
       oscReflect.start();
@@ -72,37 +72,37 @@ const playApplauseSound = () => {
   if (typeof window === 'undefined') return;
   const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
   if (!AudioContextClass) return;
-  
+
   try {
     const ctx = new AudioContextClass();
     const bufferSize = ctx.sampleRate * 1.5; // 1.5s applause wash
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     const data = buffer.getChannelData(0);
-    
+
     // Generate white noise data
     for (let i = 0; i < bufferSize; i++) {
       data[i] = Math.random() * 2 - 1;
     }
-    
+
     const noiseNode = ctx.createBufferSource();
     noiseNode.buffer = buffer;
-    
+
     // Bandpass filter to make noise sound more like a crowd clapping/cheering
     const filter = ctx.createBiquadFilter();
     filter.type = 'bandpass';
     filter.frequency.setValueAtTime(950, ctx.currentTime);
     filter.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 1.2);
     filter.Q.setValueAtTime(1.5, ctx.currentTime);
-    
+
     const gain = ctx.createGain();
     gain.gain.setValueAtTime(0, ctx.currentTime);
     gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.25); // Gentle fade-in
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5); // Decay
-    
+
     noiseNode.connect(filter);
     filter.connect(gain);
     gain.connect(ctx.destination);
-    
+
     noiseNode.start();
     noiseNode.stop(ctx.currentTime + 1.5);
   } catch (e) {
@@ -114,21 +114,21 @@ const playTickSound = () => {
   if (typeof window === 'undefined') return;
   const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
   if (!AudioContextClass) return;
-  
+
   try {
     const ctx = new AudioContextClass();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    
+
     osc.type = 'sine';
     osc.frequency.setValueAtTime(1300, ctx.currentTime); // High pitch tick click
-    
+
     gain.gain.setValueAtTime(0.07, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
-    
+
     osc.connect(gain);
     gain.connect(ctx.destination);
-    
+
     osc.start();
     osc.stop(ctx.currentTime + 0.04);
   } catch (e) {
@@ -140,7 +140,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const spectateParam = searchParams.get('spectate');
-  
+
   // Resolve params promise
   const resolvedParams = use(params);
   const { roomId } = resolvedParams;
@@ -200,6 +200,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
   }
   const [notifications, setNotifications] = useState<UIBlockNotification[]>([]);
   const [isConfirmLeaveOpen, setIsConfirmLeaveOpen] = useState(false);
+  const [isConfirmSpectateOpen, setIsConfirmSpectateOpen] = useState(false);
 
   // Load identity values to pre-populate inputs if they exist in local storage
   useEffect(() => {
@@ -258,7 +259,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
         if (prevP.id === playerId) return false;
 
         const currP = room.participants.find(p => p.id === prevP.id);
-        
+
         // Scenario 1: Participant removed completely (e.g. during lobby phase)
         if (!currP) return true;
 
@@ -301,9 +302,9 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
 
     if (!isSpectateMode) {
       // Validate duplicate franchise team name locally before submitting
-      const isTeamNameTaken = room?.participants.some(p => 
-        !p.isSpectator && 
-        p.id !== playerId && 
+      const isTeamNameTaken = room?.participants.some(p =>
+        !p.isSpectator &&
+        p.id !== playerId &&
         p.teamName.trim().toLowerCase() === franchiseName.trim().toLowerCase()
       );
       if (isTeamNameTaken) {
@@ -312,9 +313,9 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
       }
 
       // Validate duplicate franchise emblem locally before submitting
-      const isAvatarTaken = room?.participants.some(p => 
-        !p.isSpectator && 
-        p.id !== playerId && 
+      const isAvatarTaken = room?.participants.some(p =>
+        !p.isSpectator &&
+        p.id !== playerId &&
         p.avatarId === selectedAvatarId
       );
       if (isAvatarTaken) {
@@ -501,11 +502,11 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
       }
 
       // Check if this commentary update is a critical event (SOLD, UNSOLD, countdown warnings)
-      const isCritical = 
-        room?.status === 'SOLD' || 
-        room?.status === 'UNSOLD' || 
-        room?.status === 'REVEAL' || 
-        room?.status === 'COMPLETED' || 
+      const isCritical =
+        room?.status === 'SOLD' ||
+        room?.status === 'UNSOLD' ||
+        room?.status === 'REVEAL' ||
+        room?.status === 'COMPLETED' ||
         (room?.timer !== undefined && room.timer <= 5);
 
       // 50ms browser safety delay for critical updates, 250ms debouncing for rapid bidding updates
@@ -528,9 +529,9 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
         utterance.onstart = () => setIsSpeaking(true);
         utterance.onend = () => setIsSpeaking(false);
         utterance.onerror = () => setIsSpeaking(false);
-        
+
         const voices = window.speechSynthesis.getVoices();
-        
+
         // Prioritize Indian-accented English voice for standard IPL flavor
         let preferredVoice = voices.find(v => v.lang === 'en-IN' || v.name.includes('India') || v.name.includes('Google India'));
         if (!preferredVoice) {
@@ -565,7 +566,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
     if (room.status !== prevStatusRef.current) {
       if (room.status === 'SOLD' || room.status === 'UNSOLD') {
         playHammerSound();
-        
+
         // Dynamic crowd applause on high-stakes deals! (>= 8 Crore)
         if (room.status === 'SOLD' && room.currentBid >= 8.0) {
           setTimeout(() => {
@@ -725,7 +726,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground relative overflow-hidden font-sans">
-      
+
       {/* Floating Emoji Reactions Layer */}
       <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden">
         <AnimatePresence>
@@ -803,13 +804,13 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
 
       {/* Main Container */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4 flex flex-col gap-4 min-h-0 z-30 justify-start select-none">
-        
+
         {room.status === 'LOBBY' ? (
           /* Lobby view */
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start min-h-0">
             {/* Host Rules and Bot controls */}
             <div className="lg:col-span-8 flex flex-col gap-6">
-              
+
               {/* Rules description card */}
               <div className="bg-card border border-border p-6 rounded-2xl relative overflow-hidden space-y-4">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl pointer-events-none" />
@@ -817,7 +818,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                   <Trophy className="w-5 h-5 text-primary" />
                   Arena Rules & Configuration
                 </h3>
-                
+
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                   <div className="bg-background/40 border border-border/80 p-3 rounded-xl">
                     <span className="text-zinc-500 font-bold block mb-1">Franchise Purse</span>
@@ -841,15 +842,14 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                 <div className="flex items-center justify-between bg-background/30 border border-border/50 p-4 rounded-2xl text-xs gap-4 flex-wrap">
                   <div className="flex items-center gap-2.5">
                     <span className="text-zinc-400 font-bold">Your Status:</span>
-                    <span className={`font-black px-2.5 py-1 rounded-lg text-[10px] uppercase tracking-wider ${
-                      myTeam?.isSpectator
+                    <span className={`font-black px-2.5 py-1 rounded-lg text-[10px] uppercase tracking-wider ${myTeam?.isSpectator
                         ? 'bg-zinc-800 border border-border/50 text-zinc-400'
                         : 'bg-primary/15 border border-primary/30 text-primary'
-                    }`}>
+                      }`}>
                       {myTeam?.isSpectator ? 'Spectating' : 'Bidding Manager'}
                     </span>
                   </div>
-                  
+
                   {myTeam?.isSpectator ? (
                     <button
                       onClick={() => {
@@ -862,17 +862,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                     </button>
                   ) : (
                     <button
-                      onClick={() => {
-                        if (confirm("Are you sure you want to release your franchise and become a spectator?")) {
-                          setIdentity({
-                            id: playerId!,
-                            name: name,
-                            teamName: 'Spectator',
-                            avatarId: 'spectator',
-                            isSpectator: true
-                          });
-                        }
-                      }}
+                      onClick={() => setIsConfirmSpectateOpen(true)}
                       className="bg-secondary hover:bg-zinc-800 hover:border-zinc-700 text-white font-extrabold px-5 py-2.5 border border-border rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
                     >
                       👁️ Switch to Spectator
@@ -889,7 +879,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                     >
                       <UserPlus className="w-4 h-4 text-primary" /> Fill Remaining With Bots
                     </button>
-                    
+
                     <div className="flex gap-1">
                       {['MI_NITA', 'RCB_BOLD', 'CSK_THALA'].map((p) => {
                         const label = p === 'MI_NITA' ? '+ Nita (MI)' : p === 'RCB_BOLD' ? '+ Bold (RCB)' : '+ Thala (CSK)';
@@ -933,20 +923,19 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
         ) : (
           /* Active Auction dashboard - Horizontal top action bar, 3 columns below (Standings/Chat toggleable) */
           <div className="flex-1 flex flex-col gap-4.5 min-h-0">
-            
+
             {/* 1. HORIZONTAL ACTION BOARD (ALWAYS ON TOP) */}
             {activePlayer && isBiddingActive && (
-              <div className={`w-full bg-card p-4 md:p-6 rounded-3xl flex flex-col lg:flex-row items-center gap-4 lg:gap-6 justify-between shrink-0 shadow-xl select-none min-h-[96px] transition-all duration-300 border ${
-                room.timer <= 5 && room.status === 'BIDDING'
+              <div className={`w-full bg-card p-4 md:p-6 rounded-3xl flex flex-col lg:flex-row items-center gap-4 lg:gap-6 justify-between shrink-0 shadow-xl select-none min-h-[96px] transition-all duration-300 border ${room.timer <= 5 && room.status === 'BIDDING'
                   ? activePlayer.popularity >= 8
                     ? 'border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.35)] animate-pulse'
                     : 'border-red-500/80 shadow-[0_0_15px_rgba(239,68,68,0.25)] animate-pulse'
                   : 'border-border/80'
-              }`}>
-                
+                }`}>
+
                 {/* Responsive wrapper to keep Section A & B grouped on mobile/tablet */}
                 <div className="flex flex-col md:flex-row lg:contents gap-4 md:gap-6 w-full lg:w-auto">
-                  
+
                   {/* A. Active Player Profile & Countdown timer */}
                   <div className="flex items-center gap-5 border-b md:border-b-0 md:border-r border-border/40 pb-4 md:pb-0 md:pr-6 shrink-0 w-full md:w-auto justify-between md:justify-start">
                     <div className="flex flex-col">
@@ -959,17 +948,15 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                     </div>
 
                     {/* Timer Box */}
-                    <div className={`flex items-center gap-2 bg-background border px-3.5 py-2 rounded-2xl shrink-0 shadow-inner transition-all duration-300 ${
-                      room.timer <= 5 && room.status === 'BIDDING'
+                    <div className={`flex items-center gap-2 bg-background border px-3.5 py-2 rounded-2xl shrink-0 shadow-inner transition-all duration-300 ${room.timer <= 5 && room.status === 'BIDDING'
                         ? 'border-red-600 shadow-[0_0_15px_rgba(239,68,68,0.7)] scale-110'
                         : 'border-border/80'
-                    }`}>
+                      }`}>
                       {room.status === 'BIDDING' && (
                         <span className={`h-2.5 w-2.5 rounded-full ${room.timer <= 5 ? 'bg-red-500 animate-ping' : 'bg-primary'}`} />
                       )}
-                      <span className={`text-sm font-black tabular-nums tracking-wide ${
-                        room.timer <= 5 && room.status === 'BIDDING' ? 'text-red-500 animate-pulse' : 'text-zinc-200'
-                      }`}>
+                      <span className={`text-sm font-black tabular-nums tracking-wide ${room.timer <= 5 && room.status === 'BIDDING' ? 'text-red-500 animate-pulse' : 'text-zinc-200'
+                        }`}>
                         {room.timer}s
                       </span>
                     </div>
@@ -996,19 +983,19 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                     <button
                       onClick={toggleTts}
                       title={isTtsEnabled ? "Mute live voice commentary" : "Unmute live voice commentary"}
-                      className={`hidden lg:flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all duration-300 max-w-[420px] flex-1 min-w-0 select-none cursor-pointer outline-none text-left ${
-                        isTtsEnabled
+                      className={`hidden lg:flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all duration-300 max-w-[420px] flex-1 min-w-0 select-none cursor-pointer outline-none text-left ${isTtsEnabled
                           ? 'bg-primary/15 border-primary/45 shadow-[0_0_15px_rgba(251,191,36,0.15)] hover:bg-primary/20 hover:scale-[1.02]'
                           : 'bg-zinc-950/20 border-border/40 hover:border-zinc-700 hover:bg-zinc-900/20 hover:scale-[1.02]'
-                      }`}
+                        }`}
                     >
                       {/* Self-contained keyframes animation style block */}
-                      <style dangerouslySetInnerHTML={{ __html: `
-                        @keyframes soundWave {
-                          0%, 100% { height: 25%; }
-                          50% { height: 100%; }
-                        }
-                      `}} />
+                      <style dangerouslySetInnerHTML={{
+                        __html: `
+                          @keyframes soundWave {
+                            0%, 100% { height: 25%; }
+                            50% { height: 100%; }
+                          }
+                        `}} />
 
                       <div className="relative flex items-center justify-center shrink-0 w-8 h-8 rounded-full bg-background/50 border border-border/60">
                         {isTtsEnabled ? (
@@ -1038,9 +1025,8 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                         <span className="text-[9px] font-black uppercase tracking-wider text-zinc-500 leading-none">
                           {isTtsEnabled ? (isSpeaking ? 'Auctioneer Speaking' : 'Live Audio ON') : 'Audio Muted'}
                         </span>
-                        <span className={`text-xs font-semibold italic whitespace-normal line-clamp-2 w-full mt-0.5 transition-colors ${
-                          isTtsEnabled ? 'text-zinc-200' : 'text-zinc-400'
-                        }`}>
+                        <span className={`text-xs font-semibold italic whitespace-normal line-clamp-2 w-full mt-0.5 transition-colors ${isTtsEnabled ? 'text-zinc-200' : 'text-zinc-400'
+                          }`}>
                           "{commentaryText || 'Click to play audio commentary'}"
                         </span>
                       </div>
@@ -1065,13 +1051,13 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
 
             {/* 2. THREE-COLUMN MIDDLE GRID CONTAINER */}
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5.5 items-stretch min-h-0">
-              
+
               {/* COLUMN 1: Bid Log Ticker (Col span 3 - Left side) */}
               <div className="lg:col-span-3 glass-panel rounded-2xl p-3.5 bg-card/65 border border-border/80 flex flex-col h-[260px] lg:h-[440px] min-h-0 select-none order-2 lg:order-1">
                 <span className="text-[9px] uppercase font-bold text-zinc-500 tracking-wider mb-2.5 block border-b border-border/30 pb-2 flex items-center gap-1.5">
                   <ListCollapse className="w-3.5 h-3.5 text-primary" /> Live Bid Activity
                 </span>
-                
+
                 <div
                   ref={bidScrollRef}
                   className="flex-1 overflow-y-auto space-y-2 pr-1 text-xs font-semibold"
@@ -1087,11 +1073,10 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                       return (
                         <div
                           key={index}
-                          className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
-                            isLatest
+                          className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${isLatest
                               ? 'bg-primary/10 border-primary/45 text-white shadow-sm glow-gold'
                               : 'bg-background/40 border-border/40 text-zinc-400'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center gap-1.5 truncate">
                             <span className="text-[9px] bg-zinc-800 text-zinc-400 h-4.5 w-4.5 rounded-full flex items-center justify-center font-extrabold shrink-0">
@@ -1115,35 +1100,33 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                   <PlayerCard player={activePlayer} status={room.status} />
                 )}
               </div>
- 
+
               {/* COLUMN 3: Toggleable Standings & Live Chat (Col span 5 - Right side, select toggle) */}
               <div className="lg:col-span-5 flex flex-col h-[380px] lg:h-[440px] min-h-0 order-3 lg:order-3">
                 <div className="glass-panel rounded-2xl border border-border/80 flex flex-col h-full bg-card/65 overflow-hidden shadow-xl">
-                  
+
                   {/* Toggle Header Switch */}
                   <div className="flex bg-secondary/35 border-b border-border/50 select-none shrink-0">
                     <button
                       onClick={() => setActiveRightTab('standings')}
-                      className={`flex-1 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                        activeRightTab === 'standings'
+                      className={`flex-1 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeRightTab === 'standings'
                           ? 'text-primary border-primary bg-background/25'
                           : 'text-zinc-400 border-transparent hover:text-zinc-200'
-                      }`}
+                        }`}
                     >
                       <Users className="w-3.5 h-3.5" /> Standings
                     </button>
                     <button
                       onClick={() => setActiveRightTab('chat')}
-                      className={`flex-1 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                        activeRightTab === 'chat'
+                      className={`flex-1 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer flex items-center justify-center gap-1.5 ${activeRightTab === 'chat'
                           ? 'text-primary border-primary bg-background/25'
                           : 'text-zinc-400 border-transparent hover:text-zinc-200'
-                      }`}
+                        }`}
                     >
                       <MessageSquare className="w-3.5 h-3.5" /> Live Chat
                     </button>
                   </div>
- 
+
                   {/* Toggle Panel content */}
                   <div className="flex-1 p-3.5 overflow-hidden flex flex-col min-h-0">
                     {activeRightTab === 'standings' ? (
@@ -1154,10 +1137,10 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                       </div>
                     )}
                   </div>
- 
+
                 </div>
               </div>
- 
+
             </div>
 
           </div>
@@ -1185,12 +1168,12 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
               >
                 {/* Left accent bar */}
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />
-                
+
                 {/* Avatar / Icon */}
                 <div className={`h-9 w-9 rounded-lg bg-gradient-to-br ${avatar ? avatar.color : 'from-zinc-700 to-zinc-800'} flex items-center justify-center shrink-0 shadow`}>
                   <LogOut className="h-5 w-5 text-white animate-pulse" />
                 </div>
-                
+
                 {/* Content */}
                 <div className="flex-1 pr-4">
                   <span className="text-xs font-black text-red-400 block uppercase tracking-wider mb-0.5">
@@ -1232,16 +1215,16 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
               className="w-full max-w-sm bg-card border border-border rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col items-center text-center z-10 pointer-events-auto"
             >
               <div className="absolute top-0 left-0 w-full h-1 bg-red-500" />
-              
+
               <div className="h-12 w-12 rounded-full bg-red-950/30 flex items-center justify-center mb-4 border border-red-900/40 text-red-500">
                 <LogOut className="h-5 w-5 animate-pulse" />
               </div>
-              
+
               <h3 className="text-base font-black text-white">Leave Bidding Room</h3>
               <p className="text-xs text-zinc-400 mt-2 mb-6 max-w-[240px]">
                 Are you sure you want to leave the bidding room? Any active bids will remain, and you'll need to re-register to re-enter.
               </p>
-              
+
               <div className="flex gap-3 w-full">
                 <button
                   onClick={() => setIsConfirmLeaveOpen(false)}
@@ -1257,6 +1240,62 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                   className="flex-1 bg-red-600 hover:bg-red-500 text-white font-black py-2.5 rounded-xl text-xs cursor-pointer transition-colors shadow-lg shadow-red-600/10"
                 >
                   Leave Arena
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Custom Spectate Confirmation Dialog */}
+      <AnimatePresence>
+        {isConfirmSpectateOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsConfirmSpectateOpen(false)}
+              className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-auto"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-sm bg-card border border-border rounded-3xl p-6 shadow-2xl relative overflow-hidden flex flex-col items-center text-center z-10 pointer-events-auto"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
+
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 border border-primary/20 text-primary">
+                <Eye className="h-5 w-5 animate-pulse" />
+              </div>
+
+              <h3 className="text-base font-black text-white">Become Spectator</h3>
+              <p className="text-xs text-zinc-400 mt-2 mb-6 max-w-[240px]">
+                Are you sure you want to release your franchise slot and become a spectator? You won't be able to place bids.
+              </p>
+
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => setIsConfirmSpectateOpen(false)}
+                  className="flex-1 bg-secondary hover:bg-zinc-800 border border-border text-zinc-300 font-bold py-2.5 rounded-xl text-xs cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setIsConfirmSpectateOpen(false);
+                    setIdentity({
+                      id: playerId!,
+                      name: name,
+                      teamName: 'Spectator',
+                      avatarId: 'spectator',
+                      isSpectator: true
+                    });
+                  }}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-background font-black py-2.5 rounded-xl text-xs cursor-pointer transition-colors shadow-lg shadow-primary/10"
+                >
+                  Confirm
                 </button>
               </div>
             </motion.div>
