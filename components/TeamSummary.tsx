@@ -107,11 +107,11 @@ export default function TeamSummary({ room, myPlayerId, onReplay }: TeamSummaryP
 
   const handleShare = () => {
     if (!myTeam || !myStats) return;
-    const shareText = `🏏 IPL Auction Arena Summary:\n🏆 Roster: ${myTeam.teamName}\n🔥 Power Score: ${myStats.powerScore}/100\n👥 Squad Count: ${myTeam.roster.length}/15\n💰 Spent: ${myStats.spent.toFixed(2)} Cr\nPlay now: ${window.location.origin}`;
+    const shareText = `🏏 auctionbidding11 Summary:\n🏆 Roster: ${myTeam.teamName}\n🔥 Power Score: ${myStats.powerScore}/100\n👥 Squad Count: ${myTeam.roster.length}/15\n💰 Spent: ${myStats.spent.toFixed(2)} Cr\nPlay now: ${window.location.origin}`;
     
     if (navigator.share) {
       navigator.share({
-        title: 'IPL Auction Arena - Squad Summary',
+        title: 'auctionbidding11 - Squad Summary',
         text: shareText,
         url: window.location.origin
       }).catch(console.error);
