@@ -64,7 +64,7 @@ export default function AuctioneerPanel({ room }: AuctioneerPanelProps) {
         return `🔨 No bids placed. ${activePlayer.name} goes UNSOLD. We will move on to the next set.`;
         
       case 'COMPLETED':
-        return "That concludes the IPL Auction Arena! Roster counts are full. Excellent bidding strategies from all managers.";
+        return "That concludes auctionbidding11! Roster counts are full. Excellent bidding strategies from all managers.";
         
       default:
         return "Bidding is underway.";
