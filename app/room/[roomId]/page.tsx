@@ -151,6 +151,7 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
     name,
     teamName,
     avatarId,
+    isSpectator,
     room,
     socketConnected,
     bidError,
@@ -206,6 +207,11 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
     if (teamName) setFranchiseName(teamName);
     if (avatarId) setSelectedAvatarId(avatarId);
   }, [name, teamName, avatarId]);
+
+  // Synchronize spectate state from store
+  useEffect(() => {
+    setIsSpectateMode(isSpectator);
+  }, [isSpectator]);
 
   // Automatically select the first available avatar if the current one is taken
   useEffect(() => {
@@ -829,6 +835,49 @@ function RoomPageContent({ params }: { params: Promise<PageParams> }) {
                     <span className="text-zinc-500 font-bold block mb-1">Overseas Cap</span>
                     <span className="text-purple-400 font-extrabold text-sm">Max 6 Squad</span>
                   </div>
+                </div>
+
+                {/* Role Switcher Controls */}
+                <div className="flex items-center justify-between bg-background/30 border border-border/50 p-4 rounded-2xl text-xs gap-4 flex-wrap">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-zinc-400 font-bold">Your Status:</span>
+                    <span className={`font-black px-2.5 py-1 rounded-lg text-[10px] uppercase tracking-wider ${
+                      myTeam?.isSpectator
+                        ? 'bg-zinc-800 border border-border/50 text-zinc-400'
+                        : 'bg-primary/15 border border-primary/30 text-primary'
+                    }`}>
+                      {myTeam?.isSpectator ? 'Spectating' : 'Bidding Manager'}
+                    </span>
+                  </div>
+                  
+                  {myTeam?.isSpectator ? (
+                    <button
+                      onClick={() => {
+                        setIsSpectateMode(false);
+                        setIsOnboarding(true);
+                      }}
+                      className="bg-primary hover:bg-primary/95 text-background font-black px-5 py-2.5 rounded-xl text-xs shadow-md transition-all active:scale-95 cursor-pointer"
+                    >
+                      🎮 Become Bidder
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (confirm("Are you sure you want to release your franchise and become a spectator?")) {
+                          setIdentity({
+                            id: playerId!,
+                            name: name,
+                            teamName: 'Spectator',
+                            avatarId: 'spectator',
+                            isSpectator: true
+                          });
+                        }
+                      }}
+                      className="bg-secondary hover:bg-zinc-800 hover:border-zinc-700 text-white font-extrabold px-5 py-2.5 border border-border rounded-xl text-xs transition-all active:scale-95 cursor-pointer"
+                    >
+                      👁️ Switch to Spectator
+                    </button>
+                  )}
                 </div>
 
                 {/* Host Control Actions */}
