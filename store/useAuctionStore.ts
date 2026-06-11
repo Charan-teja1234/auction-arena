@@ -121,9 +121,9 @@ export const useAuctionStore = create<AuctionStore>((set, get) => {
       socket.on('connect', () => {
         set({ socketConnected: true });
 
-        // Join the room instantly upon socket connection if identity is fully set
-        const { playerId, name, teamName, avatarId, isSpectator } = get();
-        if (playerId && name && (isSpectator || teamName)) {
+        // Only auto-join on reconnect (if room state is already loaded in the store)
+        const { playerId, name, teamName, avatarId, isSpectator, room } = get();
+        if (room && playerId && name && (isSpectator || teamName)) {
           let settings = undefined;
           if (typeof window !== 'undefined') {
             const urlParams = new URLSearchParams(window.location.search);
