@@ -116,7 +116,7 @@ export default function LandingPage() {
             <Trophy className="w-5 h-5 md:w-5.5 md:h-5.5" />
           </div>
           <span className="text-base sm:text-xl font-black tracking-tight text-white leading-none">
-            IPL AUCTION <span className="text-primary text-glow-gold">ARENA</span>
+            auctionbidding<span className="text-primary text-glow-gold">11</span>
           </span>
         </div>
         <div className="flex items-center gap-3 md:gap-4 select-none">
@@ -129,11 +129,11 @@ export default function LandingPage() {
             </div>
           )}
           <button
-            onClick={() => router.push('/room/IPL-ARENA')}
+            onClick={() => router.push('/room/auctionbidding11')}
             className="flex items-center gap-1.5 bg-secondary/80 hover:bg-secondary text-white border border-border/80 px-3.5 md:px-4.5 py-2.5 rounded-xl text-xs font-black transition-all transform hover:-translate-y-0.5 shadow-md cursor-pointer"
           >
             <Zap className="w-4 h-4 text-primary" />
-            Arena Match
+            Quick Match
           </button>
         </div>
       </header>
@@ -178,7 +178,7 @@ export default function LandingPage() {
                     </button>
                     
                     <button
-                      onClick={() => router.push('/room/IPL-ARENA')}
+                      onClick={() => router.push('/room/auctionbidding11')}
                       className="w-full flex items-center justify-center gap-2 bg-secondary hover:bg-secondary/80 text-white border border-border/85 font-bold py-4 rounded-xl transition-all transform hover:-translate-y-0.5 cursor-pointer text-sm"
                     >
                       <Users className="w-4.5 h-4.5 text-primary" />
@@ -295,7 +295,7 @@ export default function LandingPage() {
                     type="submit"
                     className="w-full bg-primary hover:bg-primary/95 text-background font-black py-3.5 rounded-xl text-xs shadow-lg shadow-primary/10 flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
                   >
-                    Launch Private Arena 🚀
+                    Launch Private Room 🚀
                   </button>
                 </motion.form>
               )}
@@ -387,7 +387,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           <div className="space-y-1">
             <h4 className="text-2xl sm:text-3xl font-black text-white">4,800+</h4>
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Active Arenas</p>
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Active Rooms</p>
           </div>
           <div className="space-y-1">
             <h4 className="text-2xl sm:text-3xl font-black text-primary text-glow-gold">100 Cr</h4>
@@ -408,7 +408,7 @@ export default function LandingPage() {
       <section className="w-full max-w-7xl mx-auto px-6 py-12 md:py-16 border-t border-border/40 z-10 select-none">
         <div className="text-center space-y-2 mb-12">
           <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">How To Dominate The Auction</h2>
-          <p className="text-xs sm:text-sm text-zinc-500 max-w-md mx-auto">Four simple steps to enter the arena, bid against friends, and construct a championship roster.</p>
+          <p className="text-xs sm:text-sm text-zinc-500 max-w-md mx-auto">Four simple steps to enter the room, bid against friends, and construct a championship roster.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -431,7 +431,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="w-full text-center py-6 text-[10px] text-zinc-600 border-t border-border/40 mt-auto select-none">
-        &copy; {new Date().getFullYear()} IPL Auction Arena. Created for ultimate cricket fans. No real money involved.
+        &copy; {new Date().getFullYear()} auctionbidding11. Created for ultimate cricket fans. No real money involved.
       </footer>
     </div>
   );
